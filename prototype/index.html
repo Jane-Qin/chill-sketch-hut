@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>零压画铺 · Chill Sketch Hub — 高保真原型</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* 颜色 */
+    --color-paper:#FAF7F0; --color-paper-alt:#F3EEE3; --color-surface:#FEFBF5;
+    --color-sage:#8A9A7B; --color-sage-deep:#6B7F5E; --color-sage-soft:#DCE3D5;
+    --color-wood:#C9A87C; --color-wood-light:#D9C4A0;
+    --color-orange:#E08A4B; --color-orange-deep:#D96B4A;
+    --color-yellow:#F2E2A8; --color-pink:#E8C4C4;
+    --color-seal:#C15B45; --color-seal-gold:#D9A441;
+    --color-ink:#4A4238; --color-ink-soft:#7A6F63; --color-line:#E3DACB;
+    /* 语义 */
+    --bg:var(--color-paper); --surface:var(--color-surface); --text:var(--color-ink);
+    --text-muted:var(--color-ink-soft); --brand:var(--color-sage); --accent:var(--color-orange); --border:var(--color-line);
+    /* 字体 */
+    --font-title:"ZCOOL KuaiLe","LXGW WenKai","PingFang SC","Microsoft YaHei",sans-serif;
+    --font-hand:"Ma Shan Zheng","LXGW WenKai",cursive;
+    --font-body:system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+    /* 间距 */
+    --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px; --sp-6:24px; --sp-8:32px; --sp-10:40px;
+    /* 圆角 */
+    --radius-sm:8px; --radius-md:12px; --radius-lg:16px; --radius-xl:24px; --radius-pill:999px;
+    /* 阴影 */
+    --shadow-card:0 2px 8px rgba(74,66,56,.08); --shadow-sign:0 6px 16px rgba(74,66,56,.16); --shadow-float:0 8px 24px rgba(74,66,56,.18);
+    /* 动效 */
+    --dur-fast:160ms; --dur:240ms; --dur-slow:360ms;
+    --ease-out:cubic-bezier(.22,.61,.36,1); --ease-bounce:cubic-bezier(.34,1.56,.64,1);
+    /* 布局 */
+    --nav-h:56px; --touch-min:44px;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;}
+  body{
+    min-height:100vh; padding:22px 12px 80px;
+    background:radial-gradient(circle at 50% -10%, #EFE7D8 0%, #E2D8C6 60%, #D8CCB6 100%);
+    font-family:var(--font-body); color:var(--text);
+    display:flex; flex-direction:column; align-items:center; gap:18px;
+  }
+  /* ── 开发工具条（原型导航，不属于 App 本身）── */
+  .devbar{display:flex; flex-wrap:wrap; gap:8px; justify-content:center; max-width:760px;}
+  .devbar .dev-title{width:100%; text-align:center; font-size:12px; color:var(--color-ink-soft); letter-spacing:.08em; margin-bottom:2px;}
+  .devbar button{
+    font-family:var(--font-body); font-size:13px; color:var(--color-ink);
+    background:rgba(255,255,255,.7); border:1px solid rgba(74,66,56,.14);
+    padding:7px 12px; border-radius:var(--radius-pill); cursor:pointer; transition:.16s;
+  }
+  .devbar button:hover{background:#fff;}
+  .devbar button.on{background:var(--color-sage-deep); color:#fff; border-color:var(--color-sage-deep);}
+
+  /* ── 手机设备框 ── */
+  .device{
+    width:390px; height:830px; flex:0 0 auto; position:relative; overflow:hidden;
+    background:var(--bg); border-radius:44px;
+    box-shadow:0 24px 60px rgba(74,66,56,.32), 0 0 0 10px #2E2923, 0 0 0 12px #4A4238;
+    display:flex; flex-direction:column;
+  }
+  .statusbar{
+    flex:0 0 auto; height:46px; padding:0 24px 0 28px;
+    display:flex; align-items:center; justify-content:space-between;
+    font-size:13px; font-weight:700; color:var(--color-ink);
+  }
+  .statusbar .sb-right{display:flex; gap:6px; align-items:center; font-size:12px;}
+  .notch{position:absolute; top:10px; left:50%; transform:translateX(-50%); width:104px; height:22px; background:#2E2923; border-radius:var(--radius-pill); z-index:5;}
+  .screen-body{flex:1 1 auto; overflow:hidden; position:relative;}
+
+  /* ── 页面容器：顶部控件固定，仅下方列表滚动 ── */
+  .view{display:none; flex-direction:column; height:100%; min-height:0;}
+  .view.is-active{display:flex; animation:fadeUp var(--dur-slow) var(--ease-out);}
+  .view-head{flex:0 0 auto; position:relative; z-index:3; padding:0 var(--sp-4);
+    background:var(--color-paper); box-shadow:0 8px 12px -10px rgba(74,66,56,.45);}
+  .view-scroll{flex:1 1 auto; min-height:0; overflow-y:auto; overflow-x:hidden;
+    padding:0 var(--sp-4) calc(var(--nav-h) + var(--sp-4)); scrollbar-width:none;}
+  .view-scroll::-webkit-scrollbar{display:none;}
+  @keyframes fadeUp{from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none}}
+
+  /* ── 招牌 ── */
+  .signboard{
+    position:relative; margin:6px 0 var(--sp-6); padding:var(--sp-5) var(--sp-6);
+    background:linear-gradient(150deg,var(--color-wood) 0%, var(--color-wood-light) 100%);
+    border-radius:var(--radius-lg); box-shadow:var(--shadow-sign); transform:rotate(-.8deg);
+    text-align:center; color:var(--color-ink);
+  }
+  .signboard h1{font-family:var(--font-title); font-size:28px; line-height:1.25; margin:0 0 4px; letter-spacing:.02em;}
+  .signboard p{font-size:13px; margin:0; color:rgba(74,66,56,.72);}
+  .signboard .pin{position:absolute; top:9px; width:11px; height:11px; border-radius:50%;
+    background:radial-gradient(circle at 35% 35%, #fff8, #7a6f63); box-shadow:0 1px 2px rgba(0,0,0,.35);}
+  .signboard .pin.l{left:12px;} .signboard .pin.r{right:12px;}
+
+  /* ── 小节吊牌标题 ── */
+  .section-label{
+    display:inline-flex; align-items:center; gap:var(--sp-2); margin:var(--sp-6) 0 var(--sp-3);
+    background:var(--color-wood-light); color:var(--color-ink);
+    font-family:var(--font-title); font-size:18px; padding:6px 14px; border-radius:var(--radius-sm);
+    box-shadow:var(--shadow-card); transform:rotate(-1deg);
+  }
+  .section-label::before{content:""; width:8px; height:8px; border-radius:50%; background:var(--color-orange);}
+  .section-label.yellow{background:var(--color-yellow);}
+
+  /* ── 卡片 ── */
+  .card{background:var(--surface); border-radius:var(--radius-lg); box-shadow:var(--shadow-card); padding:var(--sp-4); margin-bottom:var(--sp-3);}
+  .note{
+    background:var(--color-yellow); border-radius:var(--radius-lg); padding:var(--sp-4) var(--sp-5);
+    box-shadow:var(--shadow-card); transform:rotate(-.8deg); margin-bottom:var(--sp-3);
+    font-size:15px; line-height:1.7; position:relative;
+  }
+  .note::before{content:""; position:absolute; top:-8px; left:50%; transform:translateX(-50%) rotate(-3deg); width:64px; height:16px; background:rgba(217,196,160,.75); border-radius:2px;}
+  .note p{margin:0;}
+
+  /* ── 时间轴（指南五步）── */
+  .timeline{position:relative; padding-left:34px;}
+  .timeline::before{content:""; position:absolute; left:11px; top:6px; bottom:6px; width:0; border-left:2px dashed var(--color-line);}
+  .tl-item{position:relative; margin-bottom:var(--sp-3);}
+  .tl-item .dot{position:absolute; left:-30px; top:14px; width:20px; height:20px; border-radius:50%; display:grid; place-items:center; font-size:11px; color:#fff; font-weight:700; box-shadow:var(--shadow-card);}
+  .tl-item .card{margin-bottom:0;}
+  .tl-item h3{font-family:var(--font-title); font-size:18px; margin:0 0 2px;}
+  .tl-item p{margin:0; font-size:14px; line-height:1.6; color:var(--text-muted);}
+
+  /* ── 折叠输入卡 ── */
+  .composer{display:flex; align-items:center; gap:var(--sp-3); background:var(--surface); border:1.5px dashed var(--border);
+    border-radius:var(--radius-lg); padding:14px var(--sp-4); color:var(--text-muted); font-size:15px; cursor:pointer; margin-bottom:var(--sp-4);}
+  .composer .plus{width:26px; height:26px; border-radius:50%; background:var(--color-sage-soft); color:var(--color-sage-deep); display:grid; place-items:center; font-size:18px; line-height:1;}
+
+  /* ── 手账顶部：搜索 + 指南入口 ── */
+  .journal-tools{display:flex; align-items:center; gap:var(--sp-2); margin-top:10px; margin-bottom:var(--sp-3);}
+  .journal-tools .search-bar{flex:1; min-width:0; margin:0;}
+  /* 新手绘画指南：搜索栏右侧小图标 */
+  .guide-btn{width:44px; height:44px; flex:none; padding:0; border:none; cursor:pointer;
+    background:linear-gradient(135deg,var(--color-yellow),#F6EBC4); color:var(--color-ink);
+    border-radius:var(--radius-pill); box-shadow:var(--shadow-card);
+    display:grid; place-items:center; font-size:19px; line-height:1;}
+  /* ── 子页面顶栏（返回箭头） ── */
+  .subpage-head{display:flex; align-items:center; gap:var(--sp-2); margin-top:6px; margin-bottom:var(--sp-3);}
+  .subpage-head h2{flex:1; text-align:center; margin:0; font-family:var(--font-title); font-size:19px;
+    letter-spacing:1px; color:var(--color-ink);}
+  .subpage-head .spacer{width:36px; flex:none;}
+  .back-btn{width:36px; height:36px; flex:none; padding:0 0 3px; border:1.5px solid var(--border); border-radius:50%;
+    background:var(--surface); color:var(--color-ink); font-size:22px; line-height:1; cursor:pointer;
+    display:grid; place-items:center; box-shadow:var(--shadow-card);}
+
+  /* ── 手账搜索条 ── */
+  .search-bar{display:flex; align-items:center; gap:var(--sp-2); background:var(--surface); border:1.5px solid var(--border);
+    border-radius:var(--radius-pill); padding:11px var(--sp-4); margin-top:10px; margin-bottom:var(--sp-3); box-shadow:var(--shadow-card);}
+  .search-bar .sb-ico{font-size:15px; color:var(--text-muted);}
+  .search-bar input{flex:1; min-width:0; border:none; outline:none; background:transparent; font-family:inherit; font-size:14px; color:var(--color-ink);}
+  .search-bar input::placeholder{color:var(--text-muted);}
+  .search-bar input::-webkit-search-cancel-button{display:none;}
+  .search-bar .sb-clear{border:none; background:var(--color-paper-alt); color:var(--color-ink-soft); width:20px; height:20px;
+    border-radius:50%; font-size:11px; line-height:1; cursor:pointer; display:grid; place-items:center; padding:0; flex:none;}
+
+  /* ── 工具条 ── */
+  .toolbar{display:flex; gap:var(--sp-2); margin-bottom:var(--sp-4);}
+  .search{flex:1; display:flex; align-items:center; gap:var(--sp-2); background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-pill); padding:9px var(--sp-4); color:var(--text-muted); font-size:13px;}
+  .tool-btn{display:inline-flex; align-items:center; gap:4px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-pill); padding:9px 14px; font-size:13px; color:var(--text-muted); white-space:nowrap;}
+  .tool-btn.star{color:var(--color-seal-gold); border-color:var(--color-seal-gold);}
+
+  /* ── 标签 ── */
+  .tag{display:inline-block; font-size:13px; padding:3px 10px; border-radius:var(--radius-pill); background:var(--color-paper-alt); color:var(--text-muted); border:1px solid var(--border); margin:0 6px 6px 0;}
+  .tag.sel{background:var(--color-sage-soft); color:var(--color-sage-deep); border-color:var(--brand);}
+  .tag.yellow{background:var(--color-yellow); color:#8a7530; border-color:transparent;}
+  .tag.pink{background:var(--color-pink); color:#9a6b6b; border-color:transparent;}
+
+  /* ── 句子卡 / 文摘卡 ── */
+  .quote-card{position:relative; background:var(--color-paper-alt); border-radius:var(--radius-lg); box-shadow:var(--shadow-card); padding:var(--sp-5) var(--sp-4) var(--sp-4); margin-bottom:var(--sp-3);}
+  .quote-card .mark{position:absolute; top:2px; left:10px; font-family:Georgia,serif; font-size:46px; line-height:1; color:var(--color-wood-light); opacity:.9;}
+  .quote-card .txt{font-family:var(--font-hand); font-size:20px; line-height:1.6; color:var(--color-ink); margin:10px 0 6px;}
+  .quote-card .src{font-size:13px; color:var(--text-muted);}
+  .quote-card .tags{margin-top:10px;}
+  .quote-card .ops{display:flex; align-items:center; gap:var(--sp-3); margin-top:12px; padding-top:12px; border-top:1px dashed var(--border);}
+  .quote-card .ops .spacer{flex:1;}
+  .star-toggle{font-size:16px; color:var(--color-seal-gold);}
+
+  /* ── 按钮 ── */
+  .btn{font-family:var(--font-body); font-size:15px; border:none; border-radius:var(--radius-pill); padding:0 var(--sp-6); height:44px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; gap:6px; transition:.16s;}
+  .btn:active{transform:scale(.97);}
+  .btn-primary{background:var(--brand); color:#FEFBF5;}
+  .btn-accent{background:var(--accent); color:#FEFBF5; box-shadow:0 4px 12px rgba(224,138,75,.35);}
+  .btn-secondary{background:transparent; border:1.5px solid var(--brand); color:var(--brand);}
+  .btn-text{background:transparent; color:var(--brand); padding:0 var(--sp-3);}
+  .btn-block{display:flex; width:100%;}
+  .btn-sm{height:36px; font-size:13px; padding:0 var(--sp-4);}
+
+  /* ── 手账记录卡 ── */
+  .date-head{font-family:var(--font-hand); font-size:15px; color:var(--text-muted); margin:var(--sp-4) 0 var(--sp-2) 2px;}
+  .record{background:var(--surface); border-radius:var(--radius-lg); box-shadow:var(--shadow-card); padding:var(--sp-4); margin-bottom:var(--sp-3);}
+  .record img{width:100%; height:180px; object-fit:cover; border-radius:var(--radius-md); display:block; margin-bottom:var(--sp-3); background:var(--color-paper-alt);}
+  .record .txt{font-size:15px; line-height:1.6; margin:0 0 10px;}
+  .record .ops{display:flex; align-items:center; gap:var(--sp-1); margin-top:10px; padding-top:10px; border-top:1px dashed var(--border);}
+
+  /* ── 分段控件 ── */
+  .segmented{position:relative; display:flex; background:var(--color-paper-alt); border:1px solid var(--border); border-radius:var(--radius-pill); padding:4px; margin-bottom:var(--sp-4);}
+  .segmented .thumb{position:absolute; top:4px; bottom:4px; left:4px; width:calc(50% - 4px); background:var(--color-sage-soft); border-radius:var(--radius-pill); transition:transform var(--dur) var(--ease-out);}
+  .segmented[data-mode="b"] .thumb{transform:translateX(100%);}
+  .seg-btn{position:relative; z-index:1; flex:1; border:none; background:transparent; font-family:var(--font-body); font-size:14px; color:var(--text-muted); height:36px; border-radius:var(--radius-pill); cursor:pointer; transition:color var(--dur);}
+  .seg-btn.is-active{color:var(--color-sage-deep); font-weight:700;}
+
+  /* ── 营业牌 ── */
+  .plate{display:flex; align-items:center; justify-content:space-between; gap:var(--sp-3); background:var(--color-paper-alt); border:1.5px solid var(--color-wood); border-radius:var(--radius-md); padding:12px var(--sp-4); margin-bottom:var(--sp-4); box-shadow:var(--shadow-card);}
+  .plate.gold{border-color:var(--color-seal-gold); background:linear-gradient(150deg,#FBF3DE,#F6E7BE);}
+  .plate .pp-label{font-size:13px; color:var(--text-muted); font-family:var(--font-hand); font-size:16px;}
+  .plate .pp-count{font-size:15px; margin-left:6px;}
+  .plate .pp-count b{font-family:var(--font-title); font-size:22px; color:var(--color-orange-deep);}
+  .plate .dots{display:flex; align-items:center; gap:6px;}
+  .plate .dot{width:13px; height:13px; border-radius:50%; border:1.5px solid var(--color-seal);}
+  .plate .dot.on{background:var(--color-seal);}
+  .plate .stars{font-size:13px; color:var(--color-seal-gold); letter-spacing:-1px;}
+
+  /* ── 训练模式 A ── */
+  .pick-row{display:flex; align-items:center; justify-content:space-between; gap:var(--sp-2); margin-bottom:var(--sp-3);}
+  .pick-row .pick-hint{font-size:13px; color:var(--text-muted);}
+  .chips{display:flex; gap:6px;}
+  .chip{font-size:12px; padding:6px 10px; border-radius:var(--radius-pill); border:1px solid var(--border); background:var(--surface); color:var(--text-muted); cursor:pointer;}
+  .chip.is-active{background:var(--color-sage-soft); color:var(--color-sage-deep); border-color:var(--brand); font-weight:700;}
+  .chip.ghost{color:var(--brand); border-color:var(--brand);}
+  .ref-card{position:relative; background:var(--surface); border-radius:var(--radius-lg); box-shadow:var(--shadow-card); padding:10px; margin-bottom:var(--sp-3);}
+  .ref-card img{width:100%; height:380px; object-fit:cover; border-radius:var(--radius-md); display:block; background:var(--color-paper-alt);}
+  .ref-card .tape{position:absolute; top:-9px; left:50%; transform:translateX(-50%) rotate(-3deg); width:78px; height:18px; background:rgba(217,196,160,.8); border-radius:2px; box-shadow:0 1px 3px rgba(74,66,56,.15);}
+  .ref-card .badge{position:absolute; right:16px; bottom:18px; background:rgba(74,66,56,.72); color:#fff; font-size:11px; padding:3px 9px; border-radius:var(--radius-pill);}
+  .rule-bar{text-align:center; font-family:var(--font-hand); font-size:17px; color:var(--color-sage-deep); background:var(--color-sage-soft); border-radius:var(--radius-pill); padding:9px; margin-bottom:var(--sp-4);}
+
+  /* 模式 A 计时进行态：顶部计时 + 大面积画题 */
+  .run-timer-bar{display:flex; align-items:center; gap:var(--sp-4); background:linear-gradient(135deg,var(--color-orange) 0%, var(--color-orange-deep) 100%); border-radius:var(--radius-lg); box-shadow:0 8px 20px rgba(217,107,74,.42); padding:14px var(--sp-5); margin-bottom:var(--sp-3); color:#FFF3EA;}
+  .run-timer-bar .rt-time{font-family:var(--font-title); font-size:38px; line-height:1; letter-spacing:.03em; color:#fff; text-shadow:0 2px 6px rgba(0,0,0,.22);}
+  .run-timer-bar .rt-meta{flex:1; min-width:0;}
+  .run-timer-bar .rt-meta .cap{font-size:12px; color:rgba(255,255,255,.85);}
+  .run-timer-bar .rt-meta .label{font-size:13px; color:#fff; font-weight:700; margin-bottom:2px;}
+  .run-track{height:7px; border-radius:var(--radius-pill); background:rgba(255,255,255,.32); margin-top:8px; overflow:hidden;}
+  .run-track i{display:block; height:100%; border-radius:inherit; background:#fff; box-shadow:0 0 10px rgba(255,255,255,.9);}
+  .run-canvas{position:relative; background:var(--surface); border-radius:var(--radius-lg); box-shadow:var(--shadow-card); padding:10px; margin-bottom:var(--sp-3);}
+  .run-canvas img{width:100%; height:432px; object-fit:cover; border-radius:var(--radius-md); display:block; background:var(--color-paper-alt);}
+  .run-canvas .tip{position:absolute; left:50%; bottom:22px; transform:translateX(-50%); background:rgba(74,66,56,.74); color:#fff; font-size:12px; padding:5px 14px; border-radius:var(--radius-pill); white-space:nowrap;}
+
+  /* 句子卡（模式 B 灵感） */
+  .idea-card{background:var(--surface); border-radius:var(--radius-lg); box-shadow:var(--shadow-card); padding:var(--sp-5); margin-bottom:var(--sp-3); position:relative;}
+  .idea-card .label{font-size:12px; color:var(--text-muted); letter-spacing:.1em;}
+  .idea-card .line{font-family:var(--font-hand); font-size:24px; line-height:1.5; color:var(--color-ink); margin:10px 0 12px;}
+  .idea-card .from{font-size:12px; color:var(--text-muted);}
+
+  /* ── 底部导航 ── */
+  .navbar{flex:0 0 auto; height:var(--nav-h); display:flex; background:var(--color-paper); border-top:1px solid var(--border); position:relative;}
+  .navbar::before{content:""; position:absolute; top:0; left:0; right:0; height:6px; background:linear-gradient(180deg, rgba(201,168,124,.16), transparent);}
+  .nav-item{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px; border:none; background:transparent; cursor:pointer; color:var(--text-muted); font-size:11px; font-family:var(--font-body); position:relative; padding-top:4px;}
+  .nav-item .ic{width:24px; height:24px; display:block;}
+  .nav-item .platelet{position:absolute; top:2px; width:30px; height:3px; border-radius:3px; background:transparent;}
+  .nav-item.is-active{color:var(--color-sage-deep); font-weight:700;}
+  .nav-item.is-active .platelet{background:var(--color-wood-light);}
+
+  /* ── FAB ── */
+  .fab{position:absolute; right:var(--sp-4); bottom:calc(var(--nav-h) + var(--sp-4)); width:52px; height:52px; border-radius:50%; background:var(--accent); border:none; box-shadow:var(--shadow-float); color:#fff; font-size:22px; cursor:pointer; display:grid; place-items:center; z-index:6;}
+  .bubble{position:absolute; right:var(--sp-4); bottom:calc(var(--nav-h) + var(--sp-4) + 62px); max-width:250px; background:var(--surface); border-radius:var(--radius-lg); box-shadow:var(--shadow-float); padding:var(--sp-4); font-size:14px; line-height:1.6; display:none; z-index:6;}
+  .bubble::after{content:""; position:absolute; right:20px; bottom:-8px; width:0; height:0; border-left:8px solid transparent; border-right:8px solid transparent; border-top:9px solid var(--surface);}
+  .bubble.show{display:block; animation:fadeUp var(--dur) var(--ease-out);}
+
+  /* ── 结果层（印章 + 撒花）── */
+  .result{position:absolute; inset:0; background:rgba(74,66,56,.38); display:none; align-items:center; justify-content:center; z-index:20; overflow:hidden;}
+  .result.show{display:flex; animation:fadeUp var(--dur-slow) var(--ease-out);}
+  .result-card{position:relative; width:250px; background:var(--surface); border-radius:var(--radius-xl); box-shadow:var(--shadow-float); padding:var(--sp-6) var(--sp-5); text-align:center; z-index:2;}
+  .stamp{width:150px; height:150px; margin:0 auto 14px; border-radius:50%; display:grid; place-items:center; position:relative; color:var(--color-seal); animation:stampIn 460ms var(--ease-bounce) both;}
+  .stamp.gold{color:var(--color-seal-gold);}
+  .stamp .ring-outer{position:absolute; inset:0; border:5px solid currentColor; border-radius:50%;}
+  .stamp .ring-inner{position:absolute; inset:12px; border:2px solid currentColor; border-radius:50%; opacity:.85;}
+  .stamp .stamp-txt{font-family:var(--font-title); font-size:30px; line-height:1.15; letter-spacing:.04em; transform:rotate(-7deg);}
+  .stamp .stamp-sub{position:absolute; bottom:26px; font-size:10px; letter-spacing:.3em; opacity:.7;}
+  .stamp .stars-badge{position:absolute; top:-6px; right:-4px; font-size:15px; color:var(--color-seal-gold); letter-spacing:-2px;}
+  @keyframes stampIn{
+    0%{transform:scale(3) translateY(-40px) rotate(-12deg); opacity:0;}
+    60%{opacity:1;}
+    100%{transform:scale(1) translateY(0) rotate(-6deg); opacity:1;}
+  }
+  .result h2{font-family:var(--font-title); font-size:22px; margin:0 0 4px; animation:fadeUp 400ms var(--ease-out) 600ms both;}
+  .result p{font-size:13px; color:var(--text-muted); margin:0 0 var(--sp-4); animation:fadeUp 400ms var(--ease-out) 700ms both;}
+  .result .btn{margin-top:6px; animation:fadeUp 400ms var(--ease-out) 800ms both;}
+  .result .hint{font-size:11px; color:var(--text-muted); margin-top:10px; opacity:.8;}
+
+  /* 撒花粒子：从底部弹出后再落下（先上冲后飘落）*/
+  .confetti-piece{position:absolute; bottom:8px; width:8px; height:12px; border-radius:2px; opacity:0; z-index:3;}
+  @keyframes confettiBurst{
+    0%{transform:translate(0,0) rotate(0); opacity:0;}
+    12%{opacity:1;}
+    46%{transform:translate(var(--dx,0),var(--up,-240px)) rotate(var(--rot1,200deg)); opacity:1;}
+    100%{transform:translate(calc(var(--dx,0) * 1.7),40px) rotate(var(--rot2,760deg)); opacity:0;}
+  }
+
+  /* ── 海报弹层 ── */
+  .modal{position:absolute; inset:0; background:rgba(74,66,56,.4); display:none; align-items:center; justify-content:center; z-index:25; padding:var(--sp-4);}
+  .modal.show{display:flex; animation:fadeUp var(--dur-slow) var(--ease-out);}
+  .poster{width:260px; background:#fff; border-radius:var(--radius-xl); box-shadow:var(--shadow-float); overflow:hidden;}
+  .poster .p-img{width:100%; height:250px; object-fit:cover; background:var(--color-paper-alt);}
+  .poster .p-body{padding:var(--sp-4);}
+  .poster .p-body .d{font-family:var(--font-hand); font-size:13px; color:var(--text-muted);}
+  .poster .p-body .t{font-size:13px; line-height:1.6; margin:6px 0 10px;}
+  .poster .p-foot{display:flex; align-items:center; justify-content:space-between; padding-top:10px; border-top:1px dashed var(--border);}
+  .poster .p-foot .logo{font-family:var(--font-title); font-size:12px; color:var(--color-wood);}
+  .poster .seal{width:44px; height:44px; border:2.5px solid var(--color-seal); border-radius:50%; color:var(--color-seal); display:grid; place-items:center; font-family:var(--font-title); font-size:14px; transform:rotate(-10deg);}
+  .modal-ops{position:absolute; left:0; right:0; bottom:26px; display:flex; gap:var(--sp-3); justify-content:center;}
+
+  /* ── 空状态 ── */
+  .empty{text-align:center; padding:var(--sp-8) var(--sp-4);}
+  .empty .art{width:120px; height:120px; margin:0 auto var(--sp-4); border:3px dashed var(--color-wood-light); border-radius:28px; display:grid; place-items:center; font-size:44px; color:var(--color-wood);}
+  .empty p{font-size:14px; color:var(--text-muted); margin:0 0 var(--sp-4);}
+</style>
+</head>
+<body>
+
+<!-- ══ 原型导航（非 App 内容）══ -->
+<div class="devbar" id="devbar">
+  <div class="dev-title">零压画铺 · 高保真原型 · 点击切换页面 / 状态</div>
+</div>
+
+<!-- ══ 手机 ══ -->
+<div class="device">
+  <div class="notch"></div>
+  <div class="statusbar">
+    <span>10:24</span>
+    <span class="sb-right">📶 &nbsp;●&nbsp; ▮</span>
+  </div>
+
+  <div class="screen-body" id="screenBody">
+
+    <!-- ─── 页面二：文摘 ─── -->
+    <section class="view" id="view-excerpts">
+      <div class="view-head">
+        <div class="composer" style="margin-top:10px"><span class="plus">＋</span> 写一句新摘抄</div>
+
+        <div class="toolbar">
+          <div class="search">🔍 搜句子 / 出处</div>
+          <div class="tool-btn">标签 ▾</div>
+          <div class="tool-btn star">★ 收藏</div>
+        </div>
+      </div>
+
+      <div class="view-scroll">
+      <div class="quote-card">
+        <span class="mark">“</span>
+        <div class="txt">生活明朗，万物可爱。</div>
+        <div class="src">—— 汪曾祺</div>
+        <div class="tags"><span class="tag">#好词好句</span><span class="tag">#治愈放松</span></div>
+        <div class="ops">
+          <span class="star-toggle">★</span>
+          <span class="spacer"></span>
+          <button class="btn btn-accent btn-sm">画这句</button>
+          <button class="btn btn-text btn-sm">编辑</button>
+        </div>
+      </div>
+
+      <div class="quote-card">
+        <span class="mark">“</span>
+        <div class="txt">慢慢来，比较快。</div>
+        <div class="src">—— 随手记</div>
+        <div class="tags"><span class="tag">#振奋打气</span></div>
+        <div class="ops">
+          <span class="star-toggle" style="color:var(--border)">☆</span>
+          <span class="spacer"></span>
+          <button class="btn btn-accent btn-sm">画这句</button>
+          <button class="btn btn-text btn-sm">编辑</button>
+        </div>
+      </div>
+
+      <div class="quote-card">
+        <span class="mark">“</span>
+        <div class="txt">雨后的泥土味，像刚拆封的橡皮。</div>
+        <div class="src">—— 随手记</div>
+        <div class="tags"><span class="tag">#灵感画题</span><span class="tag">#随手记</span></div>
+        <div class="ops">
+          <span class="star-toggle">★</span>
+          <span class="spacer"></span>
+          <button class="btn btn-accent btn-sm">画这句</button>
+          <button class="btn btn-text btn-sm">编辑</button>
+        </div>
+      </div>
+      </div>
+    </section>
+
+    <!-- ─── 页面三：我的手账 ─── -->
+    <section class="view" id="view-journal">
+      <div class="view-head">
+      <div class="journal-tools">
+        <div class="search-bar">
+          <span class="sb-ico">🔍</span>
+          <input id="journalSearch" type="search" placeholder="搜索标签或文字，如：杯子 / #日常涂鸦" autocomplete="off">
+          <button class="sb-clear" id="journalClear" type="button" hidden aria-label="清空">✕</button>
+        </div>
+        <button class="guide-btn" id="guideToggle" type="button" aria-label="新手绘画指南" title="新手绘画指南">💡</button>
+      </div>
+
+      <div class="composer"><span class="plus">＋</span> 贴一张新作品</div>
+      </div>
+
+      <div class="view-scroll">
+      <div class="date-head">2026-10-14 周三</div>
+      <div class="record" data-search="今天画了个歪歪扭扭的杯子，居然有点可爱。#日常涂鸦 #耐丑训练 咖啡 马克杯">
+        <img src="https://console.enterprise.trae.cn/api/ide/v1/text_to_image?prompt=a%20simple%20amateur%20pencil%20sketch%20of%20a%20coffee%20cup%20in%20a%20sketchbook%2C%20top%20view%2C%20soft%20warm%20light&image_size=landscape_4_3" alt="作品">
+        <p class="txt">今天画了个歪歪扭扭的杯子，居然有点可爱。</p>
+        <div><span class="tag">#日常涂鸦</span><span class="tag">#耐丑训练</span></div>
+        <div class="ops">
+          <button class="btn btn-text btn-sm">生成分享图</button>
+          <span class="spacer" style="flex:1"></span>
+          <button class="btn btn-text btn-sm" style="color:var(--text-muted)">删除</button>
+        </div>
+      </div>
+
+      <div class="date-head">2026-10-12 周一</div>
+      <div class="record" data-search="一句话画图：想到哪画到哪，猫画成了团。#一句话画图 #情绪宣泄 猫咪 涂鸦">
+        <img src="https://console.enterprise.trae.cn/api/ide/v1/text_to_image?prompt=a%20naive%20childlike%20crayon%20doodle%20of%20a%20cat%20on%20paper%2C%20playful%2C%20warm%20tones%2C%20sketchbook%20photo&image_size=landscape_4_3" alt="作品">
+        <p class="txt">一句话画图：想到哪画到哪，猫画成了团。</p>
+        <div><span class="tag">#一句话画图</span><span class="tag">#情绪宣泄</span></div>
+        <div class="ops">
+          <button class="btn btn-text btn-sm">生成分享图</button>
+          <span class="spacer" style="flex:1"></span>
+          <button class="btn btn-text btn-sm" style="color:var(--text-muted)">删除</button>
+        </div>
+      </div>
+
+      <div class="empty" id="journalEmpty" hidden>
+        <div class="art">🔍</div>
+        <p>没找到相关作品，换个词试试～</p>
+      </div>
+      </div>
+    </section>
+
+    <!-- ─── 子页面：新手绘画指南 ─── -->
+    <section class="view" id="view-guide">
+      <div class="view-head">
+        <div class="subpage-head">
+          <button class="back-btn" id="guideBack" aria-label="返回">‹</button>
+          <h2>新手绘画指南</h2>
+          <span class="spacer"></span>
+        </div>
+      </div>
+
+      <div class="view-scroll">
+      <div class="note">
+        <p>欢迎推门进来。<br>这里不考美院，也没人打分——画得丑，也照样有人给你盖章。</p>
+      </div>
+
+      <div class="section-label">破除迷思</div>
+      <div class="card" style="font-size:15px;line-height:1.7;">
+        成年人学画画，不是为了考美院。不需要一上来就死磕素描和透视，先把「敢下笔」找回来。
+      </div>
+
+      <div class="section-label yellow">五步降维路径</div>
+      <div class="timeline">
+        <div class="tl-item"><span class="dot" style="background:var(--color-sage)">1</span>
+          <div class="card"><h3>涂鸦</h3><p>解除"不会画"的心理，先建立手感。</p></div></div>
+        <div class="tl-item"><span class="dot" style="background:#9CA786">2</span>
+          <div class="card"><h3>形状观察</h3><p>把世界简化成圆、方、三角。</p></div></div>
+        <div class="tl-item"><span class="dot" style="background:var(--color-wood)">3</span>
+          <div class="card"><h3>线描 / 简笔</h3><p>画生活小物，成就感来得最快。</p></div></div>
+        <div class="tl-item"><span class="dot" style="background:#D79A66">4</span>
+          <div class="card"><h3>构图与表达</h3><p>画面布局与留白，让画有呼吸感。</p></div></div>
+        <div class="tl-item"><span class="dot" style="background:var(--color-orange)">5</span>
+          <div class="card"><h3>素描</h3><p>带着观察力再进入，不再痛苦。</p></div></div>
+      </div>
+      </div>
+    </section>
+
+    <!-- ─── 页面四：耐丑训练 ─── -->
+    <section class="view" id="view-training">
+      <div class="view-head">
+      <div class="segmented" id="segmented" data-mode="a" style="margin-top:10px">
+        <span class="thumb"></span>
+        <button class="seg-btn is-active" data-mode="a">看图速写</button>
+        <button class="seg-btn" data-mode="b">一句话画图</button>
+      </div>
+
+      <div class="plate" id="plate">
+        <div>
+          <span class="pp-label" id="plateLabel">今日营业</span>
+          <span class="pp-count"><b id="plateCount">2</b> 张</span>
+        </div>
+        <div class="dots" id="plateDots">
+          <i class="dot on"></i><i class="dot on"></i><i class="dot"></i><i class="dot"></i><i class="dot"></i>
+        </div>
+      </div>
+      </div>
+
+      <div class="view-scroll">
+      <!-- 模式 A -->
+      <div id="modeA">
+        <div class="blk-a-idle">
+          <div class="pick-row">
+            <span class="pick-hint">选一张参考图</span>
+            <div class="chips">
+              <button class="chip is-active">内置</button>
+              <button class="chip">自选 / 上传</button>
+              <button class="chip ghost">换一张</button>
+            </div>
+          </div>
+          <div class="ref-card">
+            <span class="tape"></span>
+            <img src="https://console.enterprise.trae.cn/api/ide/v1/text_to_image?prompt=a%20small%20potted%20succulent%20plant%20on%20a%20wooden%20table%2C%20soft%20daylight%2C%20cozy%20minimal%20photo&image_size=portrait_4_3" alt="参考图">
+            <span class="badge">已选 · 锁定画题</span>
+          </div>
+          <button class="btn btn-accent btn-block" data-act="start-a">开始挑战</button>
+          <div class="pick-hint" style="text-align:center;font-size:12px;color:var(--text-muted);margin-top:8px">开始后 · 顶部出现 10:00 倒计时</div>
+        </div>
+
+        <div class="blk-a-running" hidden>
+          <div class="run-timer-bar">
+            <div class="rt-time" id="runTime">09:42</div>
+            <div class="rt-meta">
+              <div class="label">正在计时 · 照着图把它画下来</div>
+              <div class="cap">画丑无罪 · 画完就赢</div>
+              <div class="run-track"><i id="runTrack" style="width:97%"></i></div>
+            </div>
+          </div>
+          <div class="run-canvas">
+            <img src="https://console.enterprise.trae.cn/api/ide/v1/text_to_image?prompt=a%20small%20potted%20succulent%20plant%20on%20a%20wooden%20table%2C%20soft%20daylight%2C%20cozy%20minimal%20photo&image_size=portrait_4_3" alt="画题">
+            <span class="tip">照着画 · 不限像不像，只管下笔</span>
+          </div>
+          <button class="btn btn-secondary btn-block" data-act="give-up">放弃这一张</button>
+        </div>
+      </div>
+
+      <!-- 模式 B -->
+      <div id="modeB" hidden>
+        <div class="blk-b-idle">
+          <div class="idea-card">
+            <div class="label">今天画这句</div>
+            <div class="line">雨后的泥土味，像刚拆封的橡皮。</div>
+            <div class="from">—— 来自「文摘」· 随手记</div>
+          </div>
+          <div class="rule-bar">想到哪画到哪 · 不限时 · 画完就赢</div>
+          <button class="btn btn-accent btn-block" data-act="start-b" style="margin-bottom:10px">开始画</button>
+          <button class="btn btn-text btn-block" style="color:var(--text-muted)">换一句</button>
+        </div>
+
+        <div class="blk-b-drawing" hidden>
+          <div class="idea-card">
+            <div class="label">今天画这句</div>
+            <div class="line">雨后的泥土味，像刚拆封的橡皮。</div>
+            <div class="from">—— 来自「文摘」· 随手记</div>
+          </div>
+          <div class="rule-bar">画到哪算哪 · 不限时 · 想改就改</div>
+          <button class="btn btn-primary btn-block" data-act="finish-b">画完了 · 打卡</button>
+        </div>
+      </div>
+      </div>
+    </section>
+
+  </div><!-- /screen-body -->
+
+  <!-- 全屏结果层（印章 + 撒花）-->
+  <div class="result" id="result">
+    <div class="result-card">
+      <div class="stamp" id="stamp">
+        <span class="ring-outer"></span><span class="ring-inner"></span>
+        <span class="stamp-txt" id="stampTxt">画完就赢</span>
+        <span class="stamp-sub">CHILL HUB</span>
+        <span class="stars-badge" id="stampStars" hidden>★★</span>
+      </div>
+      <h2 id="resultTitle">画完就赢</h2>
+      <p id="resultSub">这一张，已经赢了。</p>
+      <button class="btn btn-accent btn-block" id="resultBtn">立即拍照打卡</button>
+      <div class="hint">拍下刚画完的速写，自动归档到「我的手账」</div>
+    </div>
+  </div>
+
+  <!-- 分享图弹层 -->
+  <div class="modal" id="shareModal">
+    <div class="poster">
+      <img class="p-img" src="https://console.enterprise.trae.cn/api/ide/v1/text_to_image?prompt=a%20simple%20amateur%20pencil%20sketch%20of%20a%20coffee%20cup%20in%20a%20sketchbook%2C%20top%20view%2C%20soft%20warm%20light&image_size=landscape_4_3" alt="海报">
+      <div class="p-body">
+        <div class="d">2026-10-14 周三 · 零压画铺</div>
+        <div class="t">今天画了个歪歪扭扭的杯子，居然有点可爱。</div>
+        <div class="p-foot"><span class="logo">Chill Sketch Hub</span><span class="seal">已打卡</span></div>
+      </div>
+    </div>
+    <div class="modal-ops">
+      <button class="btn btn-accent" id="savePoster">保存图片</button>
+      <button class="btn btn-secondary" id="closeShare" style="background:rgba(255,255,255,.9)">关闭</button>
+    </div>
+  </div>
+
+  <!-- FAB 求打气 -->
+  <button class="fab" id="fab" title="求打气">📣</button>
+  <div class="bubble" id="bubble">画得丑也没关系，先动笔就赢了一半。</div>
+
+  <!-- 底部导航 -->
+  <nav class="navbar" id="navbar">
+    <button class="nav-item" data-tab="excerpts">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12v16l-6-4-6 4V4Z"/></svg>
+      <span class="platelet"></span>文摘
+    </button>
+    <button class="nav-item is-active" data-tab="journal">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="9" cy="9" r="1.6"/><path d="M5 17l4-4 3 3 3-4 4 5"/></svg>
+      <span class="platelet"></span>我的手账
+    </button>
+    <button class="nav-item" data-tab="training">
+      <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="7"/><path d="M12 13V9M9 3h6"/></svg>
+      <span class="platelet"></span>耐丑训练
+    </button>
+  </nav>
+</div><!-- /device -->
+
+<script>
+(function(){
+  "use strict";
+  const $  = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => Array.from(r.querySelectorAll(s));
+
+  /* ── 1. Tab 切换 ── */
+  const navItems = $$(".nav-item");
+  const views = {
+    excerpts: $("#view-excerpts"),
+    journal:  $("#view-journal"),
+    guide:    $("#view-guide"),
+    training: $("#view-training"),
+  };
+  function go(tab){
+    Object.entries(views).forEach(([k,v]) => v.classList.toggle("is-active", k===tab));
+    const navKey = tab==="guide" ? "journal" : tab;   // 指南子页仍高亮「我的手账」
+    navItems.forEach(b => b.classList.toggle("is-active", b.dataset.tab===navKey));
+    $$(".view-scroll").forEach(s => s.scrollTop = 0);
+    devSync();
+  }
+  navItems.forEach(b => b.addEventListener("click", () => go(b.dataset.tab)));
+
+  /* ── 2. 训练页：模式 A / B 切换 ── */
+  const segmented = $("#segmented");
+  const modeA = $("#modeA"), modeB = $("#modeB");
+  function setMode(m){
+    segmented.dataset.mode = m;
+    $$(".seg-btn", segmented).forEach(b => b.classList.toggle("is-active", b.dataset.mode===m));
+    modeA.hidden = m!=="a";
+    modeB.hidden = m!=="b";
+    devSync();
+  }
+  $$(".seg-btn", segmented).forEach(b => b.addEventListener("click", () => setMode(b.dataset.mode)));
+
+  /* ── 3. 模式 A：idle → running ── */
+  const aIdle = $(".blk-a-idle"), aRun = $(".blk-a-running");
+  function setA(state){
+    aIdle.hidden = state!=="idle";
+    aRun.hidden  = state!=="running";
+    devSync();
+  }
+  /* 选图 chips（内置 / 自选 / 换一张）：仅切换选中态做演示 */
+  $$("#modeA .chip").forEach(c => c.addEventListener("click", () => {
+    if (c.classList.contains("ghost")) return;
+    $$("#modeA .chip").forEach(x => x.classList.remove("is-active"));
+    c.classList.add("is-active");
+    const hint = $("#modeA .pick-hint");
+    if (hint) hint.textContent = c.textContent.includes("内置") ? "选一张参考图" : "已选自己的图 · 10:00 待命";
+    devSync();
+  }));
+
+  /* ── 4. 模式 B：idle → drawing ── */
+  const bIdle = $(".blk-b-idle"), bDraw = $(".blk-b-drawing");
+  function setB(state){
+    bIdle.hidden = state!=="idle";
+    bDraw.hidden = state!=="drawing";
+    devSync();
+  }
+
+  /* ── 5. 营业牌进度 ── */
+  let plate = 2;                 // 今日已营业张数（演示初值）
+  const COUNT_MAX = 5;
+  function renderPlate(){
+    $("#plateCount").textContent = plate;
+    const dots = $$("#plateDots .dot");
+    dots.forEach((d,i) => d.classList.toggle("on", i < Math.min(plate, COUNT_MAX)));
+    const gold = plate >= COUNT_MAX;
+    $("#plate").classList.toggle("gold", gold);
+    $("#plateLabel").textContent = gold ? "今日超常营业" : "今日营业";
+    const stars = $("#plateStars");
+    if (stars) stars.hidden = !gold;
+  }
+  function addPlate(){ plate += 1; renderPlate(); }
+
+  /* ── 6. 结果层：印章 + 撒花（从底部弹出）── */
+  const result = $("#result");
+  const resultBtn = $("#resultBtn");
+  const praise = [
+    { title:"画完就赢",      sub:"这一张，已经赢了。",            stamp:"画完就赢" },
+    { title:"手感来了",      sub:"比昨天多画了一笔，就很好。",      stamp:"手感来了" },
+    { title:"稳",            sub:"连续营业中，你越来越敢下笔。",    stamp:"稳" },
+    { title:"进入状态",      sub:"画丑无罪，你今天状态不错。",      stamp:"进入状态" },
+    { title:"五连开张",      sub:"达标啦！今天每一个门都为你打开。", stamp:"五连开张" },
+    { title:"超常营业",      sub:"越画越顺，今天的你根本停不下来。", stamp:"超常营业" },
+    { title:"今日卷王",      sub:"这也太能画了，店主给你留个金位。", stamp:"今日卷王" },
+  ];
+  function confettiBurst(){
+    const colors = ["--color-yellow","--color-pink","--color-sage","--color-wood","--color-orange"];
+    const N = 26;
+    for (let i=0; i<N; i++){
+      const p = document.createElement("span");
+      p.className = "confetti-piece";
+      const up   = -(180 + Math.random()*140);
+      const dx   = (Math.random()*2 - 1) * 90;
+      p.style.left = (46 + Math.random()*8) + "%";
+      p.style.background = "var(" + colors[i % colors.length] + ")";
+      p.style.width  = (6 + Math.random()*5).toFixed(0) + "px";
+      p.style.height = (9 + Math.random()*7).toFixed(0) + "px";
+      p.style.setProperty("--up", up.toFixed(0) + "px");
+      p.style.setProperty("--dx", dx.toFixed(0) + "px");
+      p.style.setProperty("--rot1", (Math.random()*360).toFixed(0) + "deg");
+      p.style.setProperty("--rot2", (540 + Math.random()*540).toFixed(0) + "deg");
+      p.style.animation = `confettiBurst ${(1100 + Math.random()*600).toFixed(0)}ms cubic-bezier(.2,.7,.4,1) ${(Math.random()*160).toFixed(0)}ms both`;
+      result.appendChild(p);
+      setTimeout(() => p.remove(), 2400);
+    }
+  }
+  function openResult(){
+    const idx = Math.min(plate, praise.length-1); // plate 为提交后的张数
+    const p = praise[idx];
+    $("#stampTxt").textContent = p.stamp;
+    $("#resultTitle").textContent = p.title;
+    $("#resultSub").textContent = p.sub;
+    const gold = plate >= COUNT_MAX;
+    const stamp = $("#stamp");
+    stamp.classList.toggle("gold", gold);
+    $("#stampStars").hidden = !gold;
+    /* 重放印章动画 */
+    stamp.style.animation = "none"; void stamp.offsetWidth;
+    stamp.style.animation = "";
+    result.classList.add("show");
+    confettiBurst();
+    devSync();
+  }
+  function closeResult(){ result.classList.remove("show"); devSync(); }
+
+  resultBtn.addEventListener("click", () => { addPlate(); closeResult(); go("journal"); });
+
+  /* ── 7. data-act 动作串联 ── */
+  document.addEventListener("click", e => {
+    const el = e.target.closest("[data-act]");
+    if (!el) return;
+    switch(el.dataset.act){
+      case "start-a":  setA("running"); break;
+      case "give-up":  setA("idle");    break;
+      case "start-b":  setB("drawing"); break;
+      case "finish-b": openResult();    break;
+    }
+  });
+
+  /* ── 8. 分享弹层 ── */
+  const shareModal = $("#shareModal");
+  $("#savePoster").addEventListener("click", () => { /* 演示：仅关闭 */ shareModal.classList.remove("show"); });
+  $("#closeShare").addEventListener("click", () => shareModal.classList.remove("show"));
+  shareModal.addEventListener("click", e => { if (e.target===shareModal) shareModal.classList.remove("show"); });
+  /* 手账卡「生成分享图」触发 */
+  $$("#view-journal .record").forEach(rec => {
+    const btn = rec.querySelector(".ops button");
+    if (btn) btn.addEventListener("click", () => shareModal.classList.add("show"));
+  });
+
+  /* ── 8.5 新手绘画指南：作为子页面打开，顶部返回箭头回到手账 ── */
+  $("#guideToggle").addEventListener("click", () => go("guide"));
+  $("#guideBack").addEventListener("click", () => go("journal"));
+
+  /* ── 8.6 手账搜索：按文字 / 标签过滤作品 ── */
+  const jSearch = $("#journalSearch"), jClear = $("#journalClear"), jEmpty = $("#journalEmpty");
+  function filterJournal(){
+    const q = jSearch.value.trim().toLowerCase();
+    let any = false;
+    $$("#view-journal .record").forEach(r => {
+      const hit = !q || (r.dataset.search || "").toLowerCase().includes(q);
+      r.hidden = !hit;
+      if (hit) any = true;
+    });
+    $$("#view-journal .date-head").forEach(dh => {
+      let sib = dh.nextElementSibling, show = false;
+      while (sib && !sib.classList.contains("date-head")){
+        if (sib.classList.contains("record") && !sib.hidden){ show = true; break; }
+        sib = sib.nextElementSibling;
+      }
+      dh.hidden = !show;
+    });
+    jEmpty.hidden = any;
+    jClear.hidden = !q;
+  }
+  jSearch.addEventListener("input", filterJournal);
+  jClear.addEventListener("click", () => { jSearch.value = ""; filterJournal(); jSearch.focus(); });
+
+  /* ── 9. FAB 求打气气泡 ── */
+  const bubble = $("#bubble");
+  $("#fab").addEventListener("click", e => {
+    e.stopPropagation();
+    bubble.classList.toggle("show");
+  });
+
+  /* ── 10. 顶部 devbar：页面 / 状态快捷跳转 ── */
+  const devbar = $("#devbar");
+  const TABS = [
+    { k:"excerpts", t:"① 文摘" },
+    { k:"journal",  t:"② 我的手账" },
+    { k:"guide",    t:"💡 绘画指南（子页）" },
+    { k:"training", t:"③ 耐丑训练" },
+  ];
+  const ACTS = [
+    { k:"a-idle",     t:"A · 选图待命" },
+    { k:"a-running",  t:"A · 计时中" },
+    { k:"b-idle",     t:"B · 句子待命" },
+    { k:"b-drawing",  t:"B · 绘制中" },
+    { k:"result",     t:"✓ 结果层·撒花" },
+    { k:"result-gold",t:"★ 结果层·金章" },
+  ];
+  function buildDevbar(){
+    const row1 = document.createElement("div");
+    row1.style.cssText = "display:flex;flex-wrap:wrap;gap:8px;justify-content:center;width:100%";
+    TABS.forEach(t => {
+      const b = document.createElement("button");
+      b.textContent = t.t; b.dataset.dev = "tab:"+t.k;
+      b.addEventListener("click", () => go(t.k));
+      row1.appendChild(b);
+    });
+    const row2 = document.createElement("div");
+    row2.style.cssText = "display:flex;flex-wrap:wrap;gap:8px;justify-content:center;width:100%";
+    ACTS.forEach(a => {
+      const b = document.createElement("button");
+      b.textContent = a.t; b.dataset.dev = "act:"+a.k;
+      b.addEventListener("click", () => {
+        const k = a.k;
+        if (k==="a-idle"||k==="a-running"){ go("training"); setMode("a"); setA(k==="a-idle"?"idle":"running"); }
+        if (k==="b-idle"||k==="b-drawing"){ go("training"); setMode("b"); setB(k==="b-idle"?"idle":"drawing"); }
+        if (k==="result"){ go("training"); plate = Math.max(plate, 3); renderPlate(); openResult(); }
+        if (k==="result-gold"){ go("training"); plate = Math.max(plate, 5); renderPlate(); openResult(); }
+      });
+      row2.appendChild(b);
+    });
+    devbar.appendChild(row1); devbar.appendChild(row2);
+  }
+  function devSync(){
+    const activeTab = Object.entries(views).find(([,v]) => v.classList.contains("is-active"))?.[0];
+    $$("#devbar button").forEach(b => {
+      const [type,key] = b.dataset.dev.split(":");
+      let on = false;
+      if (type==="tab") on = key===activeTab;
+      if (type==="act"){
+        const m = segmented.dataset.mode;
+        if (key==="a-idle")     on = activeTab==="training" && m==="a" && !aIdle.hidden;
+        if (key==="a-running")  on = activeTab==="training" && m==="a" && !aRun.hidden;
+        if (key==="b-idle")     on = activeTab==="training" && m==="b" && !bIdle.hidden;
+        if (key==="b-drawing")  on = activeTab==="training" && m==="b" && !bDraw.hidden;
+        if (key==="result")     on = result.classList.contains("show") && !$("#stamp").classList.contains("gold");
+        if (key==="result-gold")on = result.classList.contains("show") && $("#stamp").classList.contains("gold");
+      }
+      b.classList.toggle("on", on);
+    });
+  }
+
+  /* ── 11. 结果层点击遮罩关闭 ── */
+  result.addEventListener("click", e => { if (e.target===result) closeResult(); });
+  document.addEventListener("click", e => { if (!e.target.closest("#fab") && !e.target.closest("#bubble")) bubble.classList.remove("show"); });
+
+  /* ── init ── */
+  buildDevbar();
+  go("journal");
+  renderPlate();
+})();
+</script>
+</body>
+</html>
