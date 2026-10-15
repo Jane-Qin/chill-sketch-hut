@@ -1,6 +1,6 @@
-# 零压画铺 · 设计变量规范 (Design Tokens)
+# 松鸦画坊 · Chill Sketch Hut 设计变量规范 (Design Tokens)
 
-> 所属：零压画铺 Chill Sketch Hub　｜　上级文档：[prd.md](../prd.md)
+> 所属：松鸦画坊 Chill Sketch Hut　｜　上级文档：[chill_sketch_hut_v1_4.md](../chill_sketch_hut_v1_4.md)
 > 说明：本文是视觉的「单一事实来源」。所有组件与页面均引用此处的变量，改主题只需改这里。
 
 ## 1. 颜色 (Color)
@@ -11,6 +11,7 @@
 | --- | --- | --- |
 | `--color-paper` | `#FAF7F0` | 墙面 / 页面底色 |
 | `--color-paper-alt` | `#F3EEE3` | 卡片底 / 次级底色 |
+| `--color-paper-dark` | `#F2ECE1` | 底部导航 / 工具条 / 次级容器底 |
 | `--color-surface` | `#FEFBF5` | 浮起卡片 / 弹层底（比纸略亮，非纯白） |
 | `--color-sage` | `#8A9A7B` | 主色（招牌绿） |
 | `--color-sage-deep` | `#6B7F5E` | 主色-深（按压 / 强调文字） |
@@ -19,8 +20,8 @@
 | `--color-wood-light` | `#D9C4A0` | 牛皮纸（标签 / 胶带） |
 | `--color-orange` | `#E08A4B` | 暖橘（营业灯 / 主要行动点） |
 | `--color-orange-deep` | `#D96B4A` | 番茄（强调按压 / 警示） |
-| `--color-yellow` | `#F2E2A8` | 手账点缀-黄 |
-| `--color-pink` | `#E8C4C4` | 手账点缀-粉 |
+| `--color-yellow` | `#F2E2A8` | 纸品点缀-淡黄 |
+| `--color-pink` | `#E8C4C4` | 纸品点缀-莫兰迪粉 |
 | `--color-seal` | `#C15B45` | 印章朱红（打卡 / 完成） |
 | `--color-seal-gold` | `#D9A441` | 金章（第 5 次强烈肯定 / 超额赞扬叠加） |
 | `--color-ink` | `#4A4238` | 正文文字 |
@@ -45,15 +46,29 @@
 - 避免纯黑 `#000` 与纯白 `#FFF`；文字禁用纯黑，用 `--color-ink`。
 - 单个屏幕内品牌色系建议不超过 3 种主色块，保持"温和纸感"。
 
+### 1.4 分享海报底纸专色（v1.4 新增）
+
+小红书 3:4 分享海报支持 3 种底纸配色（见 [components.md](./components.md) §15）：
+
+| 变量 | 色值 | 名称 / 用途 |
+| --- | --- | --- |
+| `--poster-oat` | `#FAF7F0` | 浅燕麦白（默认） |
+| `--poster-kraft` | `#EFE2CC` | 复古牛皮纸 |
+| `--poster-sage` | `#E3ECE0` | 鼠尾草绿 |
+
+> 海报由 Canvas 2D 直绘，绘制时读取上述十六进制值（Canvas 不解析 CSS 变量，需在 JS 侧维护同源常量）。
+
 ## 2. 字体 (Typography)
 
 > 中文字体文件体积大。策略：**正文走系统字体**（保证离线流畅），**仅标题 / 落款引入轻量 Web Font**（子集化后通常 < 300KB）。
 
 | 变量 | 字体栈 | 用途 |
 | --- | --- | --- |
-| `--font-title` | `"站酷快乐体", "LXGW WenKai", "PingFang SC", "Microsoft YaHei", sans-serif` | 招牌 / 页面标题 |
-| `--font-hand` | `"Ma Shan Zheng", "LXGW WenKai", cursive` | 落款 / 日期 / 便签手写感 |
-| `--font-body` | `system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif` | 正文 / 界面文字 |
+| `--font-title` | `"ZCOOL KuaiLe", "站酷快乐体", "LXGW WenKai", "PingFang SC", "Microsoft YaHei", sans-serif` | 招牌 / 页面标题 / 按钮大字 |
+| `--font-hand` | `"Long Cang", "Ma Shan Zheng", "LXGW WenKai", cursive` | 落款 / 日期 / 便签手写感 |
+| `--font-body` | `"Noto Sans SC", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif` | 正文 / 界面文字 |
+
+> 与原型 [chill_sketch_hut.html](../prototype/chill_sketch_hut.html) 一致：标题用 ZCOOL KuaiLe（站酷快乐体）、手写体用 Long Cang（龙藏）、正文用 Noto Sans SC。
 
 ### 字号与行高
 
@@ -128,6 +143,7 @@
   /* 颜色 */
   --color-paper: #FAF7F0;
   --color-paper-alt: #F3EEE3;
+  --color-paper-dark: #F2ECE1;
   --color-surface: #FEFBF5;
   --color-sage: #8A9A7B;
   --color-sage-deep: #6B7F5E;
@@ -144,6 +160,11 @@
   --color-ink-soft: #7A6F63;
   --color-line: #E3DACB;
 
+  /* 分享海报底纸专色 */
+  --poster-oat: #FAF7F0;
+  --poster-kraft: #EFE2CC;
+  --poster-sage: #E3ECE0;
+
   /* 语义别名 */
   --bg: var(--color-paper);
   --surface: var(--color-surface);
@@ -154,9 +175,9 @@
   --border: var(--color-line);
 
   /* 字体 */
-  --font-title: "站酷快乐体", "LXGW WenKai", "PingFang SC", "Microsoft YaHei", sans-serif;
-  --font-hand: "Ma Shan Zheng", "LXGW WenKai", cursive;
-  --font-body: system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-title: "ZCOOL KuaiLe", "站酷快乐体", "LXGW WenKai", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-hand: "Long Cang", "Ma Shan Zheng", "LXGW WenKai", cursive;
+  --font-body: "Noto Sans SC", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
 
   /* 间距 */
   --sp-1: 4px;  --sp-2: 8px;  --sp-3: 12px; --sp-4: 16px;
@@ -170,6 +191,11 @@
   --shadow-card: 0 2px 8px rgba(74,66,56,.08);
   --shadow-sign: 0 6px 16px rgba(74,66,56,.16);
   --shadow-float: 0 8px 24px rgba(74,66,56,.18);
+  /* 立体木牌按钮（按压 translateY(3px) 塌陷） */
+  --shadow-btn-wood: 0 4px 0 #A6855B, 0 6px 12px rgba(74,66,56,.15);
+  --shadow-btn-orange: 0 4px 0 #B8593B, 0 6px 14px rgba(224,138,75,.3);
+  --shadow-btn-sage: 0 4px 0 #536448, 0 6px 12px rgba(107,127,94,.25);
+  --shadow-stamp: inset 0 0 0 2px #D96B4A, 0 2px 6px rgba(217,107,74,.2);
 
   /* 动效 */
   --dur-fast: 160ms; --dur: 240ms; --dur-slow: 360ms;

@@ -1,0 +1,2863 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#FAF7F0" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="松鸦画坊" />
+  <title>松鸦画坊 · Chill Sketch Hut</title>
+  <!-- 引入 Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- 引入 Google Fonts 圆润与手写质感字体 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Long+Cang&family=ZCOOL+KuaiLe&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            paper: '#FAF7F0',       // 纸张底色（墙面）米白/浅燕麦
+            paperDark: '#F2ECE1',   // 稍深纸张色
+            sage: '#8A9A7B',        // 主色（招牌绿）鼠尾草绿
+            sageDark: '#6B7F5E',    // 主色-深 复古绿
+            wood: '#C9A87C',        // 木质辅色 浅棕
+            kraft: '#D9C4A0',       // 木质辅色-浅 牛皮纸
+            warmOrange: '#E08A4B',  // 暖橘点缀（营业灯）
+            tomato: '#D96B4A',      // 暖橘点缀-深 番茄色
+            noteYellow: '#F2E2A8',  // 手账点缀 淡黄
+            morandiPink: '#E8C4C4', // 手账点缀 莫兰迪粉
+            ink: '#4A4238',         // 正文文字 深棕灰
+            inkLight: '#7A6F63',    // 辅助文字 浅棕灰
+          },
+          fontFamily: {
+            sans: ['"Noto Sans SC"', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
+            display: ['"ZCOOL KuaiLe"', '"Noto Sans SC"', 'cursive'],
+            hand: ['"Long Cang"', 'cursive'],
+          },
+          boxShadow: {
+            'card': '2px 4px 12px rgba(74, 66, 56, 0.07), 0 1px 2px rgba(74, 66, 56, 0.05)',
+            'wood': '0 4px 0 #A6855B, 0 6px 12px rgba(74, 66, 56, 0.15)',
+            'orange': '0 4px 0 #B8593B, 0 6px 14px rgba(224, 138, 75, 0.3)',
+            'sage': '0 4px 0 #536448, 0 6px 12px rgba(107, 127, 94, 0.25)',
+            'stamp': 'inset 0 0 0 2px #D96B4A, 0 2px 6px rgba(217, 107, 74, 0.2)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    input, textarea {
+      user-select: text;
+    }
+    body {
+      background-color: #E8E2D5;
+      color: #4A4238;
+      font-family: 'Noto Sans SC', sans-serif;
+      overflow: hidden;
+      height: 100dvh;
+      width: 100vw;
+    }
+
+    /* 纸张肌理背景 */
+    .paper-texture {
+      background-color: #FAF7F0;
+      background-image: 
+        radial-gradient(#D9C4A0 0.55px, transparent 0.55px), 
+        radial-gradient(#E8C4C4 0.55px, #FAF7F0 0.55px);
+      background-size: 24px 24px;
+      background-position: 0 0, 12px 12px;
+    }
+
+    /* 点阵手账内页网格 */
+    .dot-grid {
+      background-size: 18px 18px;
+      background-image: radial-gradient(circle, #D9C4A0 1px, rgba(0, 0, 0, 0) 1px);
+    }
+
+    /* 横线便签纸 */
+    .lined-paper {
+      background-color: #FFFDF9;
+      background-image: linear-gradient(transparent 95%, #E8DFD1 95%);
+      background-size: 100% 28px;
+      line-height: 28px;
+    }
+
+    /* 和纸胶带效果 */
+    .washi-tape {
+      position: absolute;
+      height: 22px;
+      width: 76px;
+      opacity: 0.82;
+      z-index: 10;
+      box-shadow: 0 1px 3px rgba(74, 66, 56, 0.08);
+      clip-path: polygon(3% 0%, 97% 2%, 100% 18%, 96% 35%, 100% 52%, 97% 68%, 100% 85%, 96% 100%, 2% 98%, 0% 82%, 4% 65%, 0% 48%, 3% 32%, 0% 15%);
+    }
+
+    /* 印章敲击动画 */
+    @keyframes stampIn {
+      0% {
+        transform: scale(2.8) rotate(-18deg);
+        opacity: 0;
+      }
+      60% {
+        transform: scale(0.9) rotate(-8deg);
+        opacity: 1;
+      }
+      80% {
+        transform: scale(1.05) rotate(-10deg);
+      }
+      100% {
+        transform: scale(1) rotate(-10deg);
+        opacity: 0.92;
+      }
+    }
+    .animate-stamp {
+      animation: stampIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    }
+
+    /* 营业灯呼吸光效 */
+    @keyframes warmGlow {
+      0%, 100% { box-shadow: 0 0 6px #E08A4B, 0 0 12px rgba(224, 138, 75, 0.4); }
+      50% { box-shadow: 0 0 10px #E08A4B, 0 0 20px rgba(224, 138, 75, 0.75); }
+    }
+    .lamp-glow {
+      animation: warmGlow 2.4s infinite ease-in-out;
+    }
+
+    /* 摇晃吊牌微动效 */
+    @keyframes swingSign {
+      0%, 100% { transform: rotate(-1deg); }
+      50% { transform: rotate(1.5deg); }
+    }
+    .swing-tag {
+      transform-origin: top center;
+      animation: swingSign 4s ease-in-out infinite;
+    }
+
+    /* 立体按钮按压态 */
+    .btn-3d:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 rgba(0,0,0,0.2) !important;
+    }
+
+    /* 隐藏滚动条但保留滚动 */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* 必填项轻抖动高亮提示 */
+    @keyframes pulseRequire {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+    .animate-require {
+      animation: pulseRequire 0.45s ease-in-out 2;
+    }
+  </style>
+</head>
+<body class="flex justify-center items-center">
+
+  <!-- 外层容器：手机端全屏 100dvh，桌面端呈现精致的手作画坊木屋壳体验 -->
+  <div id="app-shell" class="relative w-full max-w-[440px] h-[100dvh] sm:h-[92dvh] sm:rounded-[34px] sm:border-[6px] sm:border-[#C9A87C] paper-texture flex flex-col overflow-hidden shadow-2xl">
+    
+    <!-- 顶部木屋檐与松鸦画坊招牌栏 -->
+    <div class="px-4 py-2 bg-gradient-to-r from-[#6B7F5E] via-[#7A8F6B] to-[#6B7F5E] border-b-2 border-[#C9A87C] flex items-center justify-between shrink-0 z-30 shadow-sm">
+      <div class="flex items-center gap-2">
+        <!-- 森林木屋与松鸦图标 -->
+        <div class="w-7 h-7 rounded-lg bg-[#FAF7F0]/15 border border-[#F2E2A8]/50 flex items-center justify-center text-[#F2E2A8]">
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 10.5L12 3l9 7.5" />
+            <path d="M5 9.5V19a2 2 0 002 2h10a2 2 0 002-2V9.5" />
+            <circle cx="12" cy="13" r="2" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-1.5">
+            <span class="font-display text-sm text-[#FAF7F0] tracking-wider leading-none">松鸦画坊</span>
+            <span class="text-[9px] px-1.5 py-0.5 rounded bg-[#FAF7F0]/15 text-[#F2E2A8] tracking-widest font-mono leading-none">CHILL SKETCH HUT</span>
+          </div>
+        </div>
+      </div>
+      <span class="font-hand text-sm text-[#F2E2A8]">进来随便画两笔~</span>
+    </div>
+
+    <!-- ======================= 视图 1：作品墙 (JournalView) ======================= -->
+    <section id="view-journal" class="flex-1 flex flex-col overflow-hidden">
+      <!-- 固定顶部栏：搜索行 + 指南灯泡 + 数据备份按钮 -->
+      <header class="px-4 pt-2.5 pb-2 bg-[#FAF7F0]/95 backdrop-blur-sm border-b border-[#D9C4A0]/60 shrink-0 z-20">
+        <div class="flex items-center gap-2">
+          <!-- 搜索框 -->
+          <div class="relative flex-1">
+            <svg class="w-4 h-4 text-inkLight absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path stroke-linecap="round" d="m21 21-4.35-4.35"></path>
+            </svg>
+            <input 
+              id="journal-search" 
+              type="text" 
+              placeholder="搜画作碎碎念或 #标签 (如 杯子 / #日常涂鸦)" 
+              class="w-full pl-9 pr-7 py-1.5 text-xs bg-[#F2ECE1] text-ink placeholder-inkLight/70 rounded-full border border-[#D9C4A0] focus:outline-none focus:border-sage transition"
+            />
+            <button id="journal-search-clear" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-inkLight hover:text-ink">
+              <svg class="w-3.5 h-3.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+            </button>
+          </div>
+
+          <!-- 备份/设置抽屉按钮 -->
+          <button id="btn-open-backup" title="画坊数据备份与恢复" class="w-8 h-8 rounded-full bg-[#F2ECE1] border border-[#D9C4A0] flex items-center justify-center text-ink hover:bg-[#D9C4A0]/40 active:scale-95 transition shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+            </svg>
+          </button>
+
+          <!-- 新手绘画指南入口（💡 图标，在搜索行右侧进入子页） -->
+          <button id="btn-open-guide" title="反焦虑绘画指南" class="relative group px-2.5 h-8 rounded-full bg-[#F2E2A8] border border-[#C9A87C] flex items-center gap-1 text-ink shadow-sm hover:bg-[#ebd587] active:scale-95 transition shrink-0">
+            <span class="text-sm">💡</span>
+            <span class="text-xs font-medium">指南</span>
+            <span class="w-2 h-2 rounded-full bg-warmOrange absolute -top-0.5 -right-0.5 animate-ping"></span>
+            <span class="w-2 h-2 rounded-full bg-warmOrange absolute -top-0.5 -right-0.5"></span>
+          </button>
+        </div>
+
+        <!-- 快捷标签筛选条 -->
+        <div id="journal-filter-tags" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-2">
+          <!-- 动态渲染筛选胶囊 -->
+        </div>
+      </header>
+
+      <!-- 作品墙滚动内容区：包含“随手贴一张”发布器 + 时间轴作品墙 -->
+      <div id="journal-scroll" class="flex-1 overflow-y-auto px-4 pt-3 pb-24 space-y-5 no-scrollbar">
+        
+        <!-- 画坊小黑板欢迎横幅 + 作品上墙折叠卡 -->
+        <div class="relative bg-[#FFFDF9] rounded-2xl p-4 border-2 border-[#D9C4A0] shadow-card">
+          <!-- 顶部和纸胶带装饰 -->
+          <div class="washi-tape bg-[#8A9A7B]/60 -top-2.5 left-1/2 -translate-x-1/2 rotate-[-1.5deg]"></div>
+          
+          <div class="flex items-center justify-between mb-2.5 pt-1">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-sage inline-block"></span>
+              <h2 class="font-display text-sm text-ink tracking-wide">画坊作品墙 · 随手贴一张</h2>
+            </div>
+            <span class="text-[11px] text-inkLight font-hand text-base">画得丑也没关系~</span>
+          </div>
+
+          <!-- 多行文本输入 -->
+          <textarea 
+            id="journal-input-text" 
+            rows="2" 
+            placeholder="写点关于这幅画的碎碎念（选填，长文也可完整生成小红书配文）..." 
+            class="w-full rounded-xl p-2.5 text-sm bg-[#FAF7F0] border border-[#D9C4A0]/80 text-ink placeholder-inkLight/60 focus:outline-none focus:border-sage resize-none leading-relaxed"
+          ></textarea>
+
+          <!-- 待上传图片预览容器 + 纸面提亮滤镜开关 -->
+          <div id="journal-upload-preview-wrap" class="hidden mt-2.5">
+            <div class="relative inline-block">
+              <img id="journal-upload-preview" src="" alt="预览" class="h-28 w-auto object-cover rounded-xl border-2 border-[#C9A87C] shadow-sm cursor-zoom-in" />
+              <span id="journal-upload-meta" class="absolute bottom-1 left-1 bg-ink/75 text-[#FAF7F0] text-[10px] px-1.5 py-0.5 rounded">已压缩</span>
+              <button id="journal-upload-remove" type="button" class="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-tomato text-white flex items-center justify-center shadow-md text-xs">✕</button>
+            </div>
+            <div class="mt-1.5 flex items-center gap-2">
+              <button id="btn-brighten-composer" type="button" class="text-[11px] px-2.5 py-0.5 rounded-full border border-[#C9A87C] bg-[#FAF7F0] text-ink hover:bg-[#F2E2A8]/60 transition flex items-center gap-1">
+                <span>✨ 提亮纸面 (去阴影)</span>
+              </button>
+              <span class="text-[10px] text-inkLight">点击缩略图可放大预览</span>
+            </div>
+          </div>
+
+          <!-- 标签选择行 -->
+          <div class="mt-2.5 flex items-center gap-1.5 flex-wrap" id="journal-composer-tags">
+            <span class="text-[11px] text-inkLight mr-0.5">贴标签:</span>
+            <button type="button" data-tag="#日常涂鸦" class="composer-tag-btn active text-[11px] px-2.5 py-0.5 rounded-full border border-sage bg-sage text-white transition">#日常涂鸦</button>
+            <button type="button" data-tag="#耐丑打卡" class="composer-tag-btn text-[11px] px-2.5 py-0.5 rounded-full border border-[#D9C4A0] bg-[#FAF7F0] text-inkLight transition">#耐丑打卡</button>
+            <button type="button" data-tag="#情绪宣泄" class="composer-tag-btn text-[11px] px-2.5 py-0.5 rounded-full border border-[#D9C4A0] bg-[#FAF7F0] text-inkLight transition">#情绪宣泄</button>
+            <button type="button" data-tag="#生活小物" class="composer-tag-btn text-[11px] px-2.5 py-0.5 rounded-full border border-[#D9C4A0] bg-[#FAF7F0] text-inkLight transition">#生活小物</button>
+          </div>
+
+          <!-- 底部操作栏：传图 + 发布盖章 -->
+          <div class="mt-3 pt-2.5 border-t border-dashed border-[#D9C4A0] flex items-center justify-between">
+            <label id="journal-upload-label" class="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#F2ECE1] hover:bg-[#D9C4A0]/50 text-ink text-xs font-medium border border-[#C9A87C]/60 active:scale-95 transition">
+              <svg class="w-4 h-4 text-sageDark" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/>
+                <circle cx="12" cy="13" r="3"/>
+              </svg>
+              <span id="upload-btn-label">拍画作 / 选相册 (必选)</span>
+              <input id="journal-file-input" type="file" accept="image/*" class="hidden" />
+            </label>
+
+            <button id="btn-publish-journal" class="btn-3d px-4 py-1.5 rounded-xl bg-sage hover:bg-sageDark text-white text-xs font-medium shadow-sage flex items-center gap-1.5 transition">
+              <span>盖章上墙</span>
+              <span class="text-sm">💮</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 时间轴作品墙容器 -->
+        <div id="journal-timeline" class="space-y-6">
+          <!-- JS 动态渲染按日期分组的画作卡片 -->
+        </div>
+      </div>
+
+      <!-- 悬浮【松鸦打气】按钮（画坊话签罐） -->
+      <button id="btn-cheer-up" class="fixed sm:absolute bottom-20 right-4 z-30 group flex items-center gap-1.5 pl-3 pr-3.5 py-2 rounded-full bg-[#FFFDF9] border-2 border-warmOrange shadow-lg hover:scale-105 active:scale-95 transition">
+        <span class="text-base group-hover:rotate-12 transition-transform">🐦</span>
+        <span class="text-xs font-display text-ink">松鸦打气</span>
+      </button>
+    </section>
+
+    <!-- ======================= 视图 2：反焦虑绘画指南 子页 (GuideView) ======================= -->
+    <section id="view-guide" class="hidden flex-1 flex flex-col overflow-hidden bg-[#FAF7F0]">
+      <!-- 固定顶部返回栏 -->
+      <header class="px-4 py-3 bg-[#FAF7F0]/95 backdrop-blur-sm border-b border-[#D9C4A0]/70 flex items-center justify-between shrink-0 z-20">
+        <button id="btn-close-guide" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#F2ECE1] border border-[#C9A87C] text-xs font-medium text-ink active:scale-95 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/>
+          </svg>
+          <span>返回作品墙</span>
+        </button>
+        <div class="flex items-center gap-1.5">
+          <span class="text-xs text-inkLight">松鸦店长的便签墙</span>
+          <span class="text-sm">📌</span>
+        </div>
+      </header>
+
+      <!-- 独立杂志/便签墙混排滚动内容区 -->
+      <div class="flex-1 overflow-y-auto px-4 pt-5 pb-12 space-y-6 no-scrollbar">
+        <!-- 杂志封面头图卡 -->
+        <div class="relative bg-[#F2E2A8]/65 rounded-2xl p-5 border-2 border-[#C9A87C] shadow-card">
+          <div class="washi-tape bg-[#E8C4C4] -top-2.5 left-8 rotate-[-4deg]"></div>
+          <div class="washi-tape bg-[#8A9A7B]/70 -top-2.5 right-8 rotate-[3deg]"></div>
+          <span class="inline-block px-2 py-0.5 rounded bg-sageDark text-[#FAF7F0] text-[10px] tracking-wider mb-2">CHILL SKETCH HUT MANIFESTO</span>
+          <h1 class="font-display text-xl text-ink leading-snug">给大人的「反焦虑绘画心法」</h1>
+          <p class="mt-2 text-xs text-inkLight leading-relaxed">
+            进门不需要准备好，这里不考美院、不查透视，只关心你今天握笔开不开心。把紧绷感留在木屋门外，随便画两笔吧。
+          </p>
+          <div class="mt-3 pt-2.5 border-t border-dashed border-[#C9A87C] flex items-center justify-between text-[11px] text-ink">
+            <span>📖 随时翻阅 · 离线常驻</span>
+            <span class="font-hand text-base text-sageDark">— 松鸦画坊店长</span>
+          </div>
+        </div>
+
+        <!-- 破除迷思便签 -->
+        <div class="relative bg-[#FFFDF9] rounded-2xl p-4 border border-[#D9C4A0] shadow-card rotate-[-0.5deg]">
+          <!-- 图钉 SVG -->
+          <div class="absolute -top-2.5 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-tomato border-2 border-white shadow flex items-center justify-center">
+            <div class="w-1.5 h-1.5 rounded-full bg-white/70"></div>
+          </div>
+          <h3 class="font-display text-base text-tomato flex items-center gap-1.5 mt-1">
+            <span>🚫</span> 破除第一大迷思：为什么要先练素描？
+          </h3>
+          <p class="mt-2 text-xs text-ink leading-relaxed">
+            很多成年人刚拿起笔，就去买石膏几何体、死磕排线和三点透视，结果三天就因为枯燥和挫败感放弃了。
+          </p>
+          <div class="mt-2.5 p-2.5 rounded-xl bg-[#FAF7F0] border-l-4 border-sage text-xs text-inkLight">
+            💡 <strong class="text-ink">真相是：</strong>成年人画画不是为了艺考！先把「手脑紧绷感」卸掉，画得歪歪扭扭反而最有生命力。
+          </div>
+        </div>
+
+        <!-- 五步降维路径时间轴 -->
+        <div class="space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="font-display text-base text-ink">🪜 松弛五步降维路径</h3>
+            <span class="text-[11px] text-inkLight">从第 1 步慢慢玩起</span>
+          </div>
+
+          <div class="relative pl-4 border-l-2 border-dashed border-[#C9A87C] space-y-4">
+            <!-- Step 1 -->
+            <div class="relative bg-[#FFFDF9] p-3.5 rounded-2xl border border-[#D9C4A0] shadow-sm">
+              <span class="absolute -left-[25px] top-3.5 w-4 h-4 rounded-full bg-sage border-2 border-[#FAF7F0]"></span>
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-sageDark">STEP 01 · 放肆涂鸦</span>
+                <span class="text-xs px-2 py-0.5 rounded-full bg-[#F2E2A8] text-ink">破冰期</span>
+              </div>
+              <p class="mt-1.5 text-xs text-ink leading-relaxed">
+                在废纸上画满螺旋线、波浪线、乱麻团。目的只有一个：<strong>解除“我不会画”的心理封印</strong>，找回儿时握笔涂抹的爽感。
+              </p>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="relative bg-[#FFFDF9] p-3.5 rounded-2xl border border-[#D9C4A0] shadow-sm">
+              <span class="absolute -left-[25px] top-3.5 w-4 h-4 rounded-full bg-warmOrange border-2 border-[#FAF7F0]"></span>
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-warmOrange">STEP 02 · 形状观察</span>
+                <span class="text-xs px-2 py-0.5 rounded-full bg-[#E8C4C4]/50 text-ink">万物皆几何</span>
+              </div>
+              <p class="mt-1.5 text-xs text-ink leading-relaxed">
+                把眼前复杂的世界全部降维成 <strong>◯ 圆、□ 方、△ 三角</strong>。水杯是长方形，猫头是圆加两个三角，瞬间不再害怕下笔。
+              </p>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="relative bg-[#FFFDF9] p-3.5 rounded-2xl border border-[#D9C4A0] shadow-sm">
+              <span class="absolute -left-[25px] top-3.5 w-4 h-4 rounded-full bg-sage border-2 border-[#FAF7F0]"></span>
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-sageDark">STEP 03 · 线描 / 生活简笔</span>
+                <span class="text-xs px-2 py-0.5 rounded-full bg-[#F2ECE1] text-ink">高成就感</span>
+              </div>
+              <p class="mt-1.5 text-xs text-ink leading-relaxed">
+                只用单线条勾勒桌上的咖啡杯、拖鞋、多肉植物。哪怕线条抖动，拼在一起就是极具个人风格的插画！
+              </p>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="relative bg-[#FFFDF9] p-3.5 rounded-2xl border border-[#D9C4A0] shadow-sm">
+              <span class="absolute -left-[25px] top-3.5 w-4 h-4 rounded-full bg-wood border-2 border-[#FAF7F0]"></span>
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-ink">STEP 04 · 构图与表达</span>
+                <span class="text-xs px-2 py-0.5 rounded-full bg-[#F2E2A8] text-ink">画面呼吸感</span>
+              </div>
+              <p class="mt-1.5 text-xs text-ink leading-relaxed">
+                学会在画纸上留白，旁边配上一两句今天的心情或【文摘】里的好句子，图文结合会让随手涂鸦瞬间变成艺术品。
+              </p>
+            </div>
+
+            <!-- Step 5 -->
+            <div class="relative bg-[#FFFDF9] p-3.5 rounded-2xl border border-[#D9C4A0] shadow-sm">
+              <span class="absolute -left-[25px] top-3.5 w-4 h-4 rounded-full bg-sageDark border-2 border-[#FAF7F0]"></span>
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-bold text-sageDark">STEP 05 · 自然进入光影素描</span>
+                <span class="text-xs px-2 py-0.5 rounded-full bg-sage/20 text-sageDark">水到渠成</span>
+              </div>
+              <p class="mt-1.5 text-xs text-ink leading-relaxed">
+                当你已经拥有观察习惯与放松心态后，再去加一点点阴影与体积，这时的素描不再痛苦，而是水到渠成的乐趣。
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 底部去训练引导卡 -->
+        <div class="bg-[#F2ECE1] rounded-2xl p-4 border border-[#C9A87C] text-center space-y-2.5">
+          <p class="font-hand text-lg text-ink">“只要画完，你就赢过了90%还在犹豫的人”</p>
+          <button id="btn-guide-to-training" class="btn-3d px-5 py-2 rounded-xl bg-warmOrange text-white text-xs font-medium shadow-orange">
+            去「耐丑训练室」随便画两笔 →
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= 视图 3：耐丑训练室 (TrainingView) ======================= -->
+    <section id="view-training" class="hidden flex-1 flex flex-col overflow-hidden">
+      <!-- 固定顶部栏：模式切换 + 营业牌（今日进度，不设上限） -->
+      <header class="px-4 pt-3 pb-2.5 bg-[#FAF7F0]/95 backdrop-blur-sm border-b border-[#D9C4A0]/60 shrink-0 z-20">
+        <div class="flex items-center justify-between gap-2">
+          <!-- 双模式切换胶囊 -->
+          <div class="inline-flex p-1 rounded-xl bg-[#F2ECE1] border border-[#D9C4A0]">
+            <button id="tab-mode-image" class="px-3 py-1.5 rounded-lg text-xs font-medium transition bg-sage text-white shadow-sm">
+              📷 看图速写 (10m)
+            </button>
+            <button id="tab-mode-sentence" class="px-3 py-1.5 rounded-lg text-xs font-medium transition text-inkLight hover:text-ink">
+              ✨ 一句话画图
+            </button>
+          </div>
+
+          <!-- 营业牌（视觉锤：不设上限的每日进度） -->
+          <button id="btn-business-sign" class="swing-tag flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#4A4238] text-[#FAF7F0] border-2 border-[#C9A87C] shadow-sm active:scale-95 transition">
+            <span id="business-lamp" class="w-2 h-2 rounded-full bg-warmOrange lamp-glow"></span>
+            <span id="business-status-text" class="text-[11px] font-medium tracking-wide">营业中 · 0 次</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- 训练进行时专属顶部提示与倒计时条（待命态隐藏，仅在训练进行时展示） -->
+      <div id="training-active-banner" class="hidden px-4 py-2.5 bg-gradient-to-r from-warmOrange to-tomato text-white shadow-md shrink-0 z-10">
+        <!-- 模式 A 限时倒计时视图 -->
+        <div id="timer-bar-box" class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-medium flex items-center gap-1">
+              <span>🌱</span>
+              <span>随手画两笔 · 动笔就很酷</span>
+            </span>
+            <span id="timer-display" class="font-display text-2xl tracking-wider drop-shadow">10:00</span>
+          </div>
+          <!-- 白色发光进度条 -->
+          <div class="w-full h-2 bg-white/30 rounded-full overflow-hidden">
+            <div id="timer-progress-bar" class="h-full bg-white rounded-full shadow-[0_0_8px_#fff] transition-all duration-300" style="width: 100%"></div>
+          </div>
+        </div>
+        <!-- 模式 B 不限时温和鼓励条 -->
+        <div id="sentence-encourage-box" class="hidden flex items-center justify-between py-0.5">
+          <span class="text-xs font-medium">✨ 随手画两笔 · 不限时自由发挥</span>
+          <span class="text-[11px] bg-white/20 px-2 py-0.5 rounded-full">自由节奏</span>
+        </div>
+      </div>
+
+      <!-- 训练室主内容滚动区 -->
+      <div class="flex-1 overflow-y-auto px-4 pt-3 pb-24 flex flex-col justify-between no-scrollbar">
+        
+        <!-- ========== 模式 A：看图速写 ========== -->
+        <div id="panel-mode-image" class="flex-1 flex flex-col justify-between space-y-3">
+          <!-- 画板卡片 -->
+          <div class="relative flex-1 min-h-[290px] bg-[#FFFDF9] rounded-2xl border-2 border-[#C9A87C] shadow-card p-3 flex flex-col">
+            <!-- 木夹子装饰 -->
+            <div class="absolute -top-2.5 left-1/2 -translate-x-1/2 w-14 h-4 rounded bg-[#C9A87C] border border-[#8c6d43] shadow-sm flex items-center justify-center">
+              <div class="w-8 h-1 bg-[#FAF7F0]/60 rounded-full"></div>
+            </div>
+
+            <div class="flex items-center justify-between text-xs text-inkLight mb-2 pt-1">
+              <span id="ref-image-title" class="font-medium text-ink">今日参考：热气腾腾的手冲咖啡壶</span>
+              <span id="ref-image-hint" class="text-[11px] px-2 py-0.5 rounded bg-[#F2ECE1]">点击画题可放大</span>
+            </div>
+
+            <!-- 大面积画题图展示区 (支持点击全屏灯箱放大查看) -->
+            <div id="ref-image-stage" class="flex-1 rounded-xl bg-[#FAF7F0] border border-dashed border-[#D9C4A0] flex items-center justify-center overflow-hidden relative p-2 cursor-zoom-in group">
+              <!-- 动态渲染 SVG 参考画题 或 用户自选图片 -->
+            </div>
+
+            <!-- 观察几何小贴士 -->
+            <p id="ref-shape-tip" class="mt-2 text-[11px] text-inkLight bg-[#FAF7F0] px-2.5 py-1.5 rounded-lg border border-[#D9C4A0]/50">
+              👀 观察提示：先把它看成简单的圆、方、三角组合，大胆下笔！
+            </p>
+          </div>
+
+          <!-- 模式 A 底部控制栏（分 Idle 挑图态 与 Running 计时态） -->
+          <div id="image-idle-controls" class="space-y-2.5 pt-1">
+            <div class="grid grid-cols-2 gap-2.5">
+              <button id="btn-change-ref-img" class="py-2.5 px-3 rounded-xl bg-[#F2ECE1] hover:bg-[#D9C4A0]/60 border border-[#C9A87C] text-xs font-medium text-ink flex items-center justify-center gap-1.5 active:scale-95 transition">
+                <span>🎲</span> 换一张内置图
+              </button>
+              <label class="cursor-pointer py-2.5 px-3 rounded-xl bg-[#F2ECE1] hover:bg-[#D9C4A0]/60 border border-[#C9A87C] text-xs font-medium text-ink flex items-center justify-center gap-1.5 active:scale-95 transition">
+                <span>🖼️</span> 自选/拍张图
+                <input id="input-custom-ref-img" type="file" accept="image/*" class="hidden" />
+              </label>
+            </div>
+            <button id="btn-start-image-timer" class="btn-3d w-full py-3 rounded-2xl bg-warmOrange hover:bg-tomato text-white font-display text-base tracking-wide shadow-orange flex items-center justify-center gap-2 transition">
+              <span>选好画题了 · 开始 10 分钟速写</span>
+              <span>⏱️</span>
+            </button>
+          </div>
+
+          <div id="image-running-controls" class="hidden space-y-2.5 pt-1">
+            <div class="flex gap-2.5">
+              <button id="btn-cancel-image-timer" class="py-3 px-4 rounded-2xl bg-[#F2ECE1] border border-[#C9A87C] text-xs font-medium text-inkLight active:scale-95 transition">
+                放弃本局
+              </button>
+              <button id="btn-finish-image-early" class="btn-3d flex-1 py-3 rounded-2xl bg-sage hover:bg-sageDark text-white font-display text-base shadow-sage flex items-center justify-center gap-2 transition">
+                <span>画完啦！提前交卷盖章</span>
+                <span>💮</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========== 模式 B：一句话画图（不限时） ========== -->
+        <div id="panel-mode-sentence" class="hidden flex-1 flex flex-col justify-between space-y-4">
+          <div class="relative flex-1 min-h-[270px] bg-[#FFFDF9] rounded-2xl border-2 border-[#C9A87C] shadow-card p-5 flex flex-col justify-between dot-grid">
+            <div class="washi-tape bg-[#F2E2A8] -top-2.5 left-1/2 -translate-x-1/2 rotate-[2deg]"></div>
+
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] px-2.5 py-0.5 rounded-full bg-sage/20 text-sageDark font-medium">脑洞画题签</span>
+              <span id="sentence-source-badge" class="text-[11px] text-inkLight">来自：画坊话签罐</span>
+            </div>
+
+            <!-- 居中句子展示 -->
+            <div class="my-auto py-6 text-center space-y-3">
+              <p class="text-2xl text-warmOrange/60 font-serif">“</p>
+              <h3 id="sentence-prompt-text" class="font-display text-lg text-ink leading-relaxed px-2">
+                一只拒绝上班、决定在吐司面包上睡午觉的橘猫
+              </h3>
+              <p id="sentence-prompt-author" class="text-xs text-inkLight font-hand text-base">— 松鸦画坊内置句库</p>
+            </div>
+
+            <div class="text-center text-[11px] text-inkLight bg-[#FAF7F0]/90 py-1.5 px-3 rounded-lg border border-[#D9C4A0]/60">
+              💡 不设倒计时，哪怕画成火柴人或者抽象线条都算满分！
+            </div>
+          </div>
+
+          <!-- 模式 B 控制按钮（分待命与绘制中） -->
+          <div id="sentence-idle-controls" class="space-y-2.5">
+            <button id="btn-change-sentence" class="w-full py-2.5 rounded-xl bg-[#F2ECE1] hover:bg-[#D9C4A0]/60 border border-[#C9A87C] text-xs font-medium text-ink flex items-center justify-center gap-1.5 active:scale-95 transition">
+              <span>🔄</span> 换一句画题（含我的文摘收藏）
+            </button>
+            <button id="btn-start-sentence-draw" class="btn-3d w-full py-3 rounded-2xl bg-sage hover:bg-sageDark text-white font-display text-base tracking-wide shadow-sage flex items-center justify-center gap-2 transition">
+              <span>就画这句 · 开始动笔</span>
+              <span>🎨</span>
+            </button>
+          </div>
+
+          <div id="sentence-running-controls" class="hidden space-y-2.5">
+            <div class="flex gap-2.5">
+              <button id="btn-cancel-sentence-draw" class="py-3 px-4 rounded-2xl bg-[#F2ECE1] border border-[#C9A87C] text-xs font-medium text-inkLight active:scale-95 transition">
+                重选题目
+              </button>
+              <button id="btn-finish-sentence-draw" class="btn-3d flex-1 py-3 rounded-2xl bg-warmOrange hover:bg-tomato text-white font-display text-base shadow-orange flex items-center justify-center gap-2 transition">
+                <span>画完啦！完成盖章</span>
+                <span>💮</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ======================= 视图 4：文摘 (ExcerptsView) ======================= -->
+    <section id="view-excerpts" class="hidden flex-1 flex flex-col overflow-hidden">
+      <!-- 固定顶部栏：搜索 + 标签筛选 + 新增句子按钮 -->
+      <header class="px-4 pt-3 pb-2.5 bg-[#FAF7F0]/95 backdrop-blur-sm border-b border-[#D9C4A0]/60 shrink-0 z-20">
+        <div class="flex items-center gap-2">
+          <div class="relative flex-1">
+            <svg class="w-4 h-4 text-inkLight absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8"></circle>
+              <path stroke-linecap="round" d="m21 21-4.35-4.35"></path>
+            </svg>
+            <input 
+              id="excerpt-search" 
+              type="text" 
+              placeholder="搜索摘抄句子、出处或 #标签..." 
+              class="w-full pl-9 pr-3 py-2 text-xs bg-[#F2ECE1] text-ink placeholder-inkLight/70 rounded-full border border-[#D9C4A0] focus:outline-none focus:border-sage"
+            />
+          </div>
+          <button id="btn-toggle-excerpt-form" class="btn-3d px-3.5 h-9 rounded-full bg-sage text-white text-xs font-medium shadow-sage flex items-center gap-1 shrink-0">
+            <span>＋ 记一句</span>
+          </button>
+        </div>
+
+        <!-- 文摘筛选胶囊 -->
+        <div id="excerpt-filter-bar" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-2">
+          <!-- 动态渲染：全部、⭐ 收藏、#好词好句、#放松、#振奋、#画题 -->
+        </div>
+      </header>
+
+      <!-- 文摘滚动内容区 -->
+      <div class="flex-1 overflow-y-auto px-4 pt-3 pb-24 space-y-4 no-scrollbar">
+        <!-- 新增/编辑句子表单折叠卡 -->
+        <div id="excerpt-form-card" class="hidden relative bg-[#FFFDF9] rounded-2xl p-4 border-2 border-[#C9A87C] shadow-card space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 id="excerpt-form-title" class="font-display text-sm text-ink">✒️ 往摘抄本里添一句</h3>
+            <button id="btn-close-excerpt-form" class="text-xs text-inkLight hover:text-ink">收起 ✕</button>
+          </div>
+          <input type="hidden" id="excerpt-edit-id" value="" />
+          <textarea 
+            id="excerpt-input-content" 
+            rows="2" 
+            placeholder="写下让你放松、愉悦或有画面感的句子（必填）..." 
+            class="w-full rounded-xl p-2.5 text-sm bg-[#FAF7F0] border border-[#D9C4A0] text-ink focus:outline-none focus:border-sage resize-none"
+          ></textarea>
+          <input 
+            id="excerpt-input-source" 
+            type="text" 
+            placeholder="出处 / 作者（选填，如：汪曾祺《人间草木》）" 
+            class="w-full rounded-xl px-3 py-2 text-xs bg-[#FAF7F0] border border-[#D9C4A0] text-ink focus:outline-none focus:border-sage"
+          />
+          <div class="flex items-center gap-1.5 flex-wrap" id="excerpt-form-tags">
+            <span class="text-[11px] text-inkLight">标签:</span>
+            <button type="button" data-etag="#好词好句" class="excerpt-tag-btn active text-[11px] px-2.5 py-0.5 rounded-full border border-sage bg-sage text-white">#好词好句</button>
+            <button type="button" data-etag="#放松" class="excerpt-tag-btn text-[11px] px-2.5 py-0.5 rounded-full border border-[#D9C4A0] bg-[#FAF7F0] text-inkLight">#放松</button>
+            <button type="button" data-etag="#振奋" class="excerpt-tag-btn text-[11px] px-2.5 py-0.5 rounded-full border border-[#D9C4A0] bg-[#FAF7F0] text-inkLight">#振奋</button>
+            <button type="button" data-etag="#画题" class="excerpt-tag-btn text-[11px] px-2.5 py-0.5 rounded-full border border-[#D9C4A0] bg-[#FAF7F0] text-inkLight">#画题</button>
+          </div>
+          <div class="flex justify-end gap-2 pt-1">
+            <button id="btn-save-excerpt" class="btn-3d px-4 py-1.5 rounded-xl bg-warmOrange text-white text-xs font-medium shadow-orange">
+              夹进摘抄本 🔖
+            </button>
+          </div>
+        </div>
+
+        <!-- 文摘列表容器 -->
+        <div id="excerpt-list" class="space-y-3.5">
+          <!-- 动态渲染文摘书签卡片 -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ======================= 全局底部固定导航栏 (Bottom Navigation Bar) ======================= -->
+    <nav id="bottom-nav" class="shrink-0 bg-[#F2ECE1] border-t-2 border-[#C9A87C] px-4 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] z-30">
+      <div class="grid grid-cols-3 gap-2">
+        <!-- Tab 1: 文摘 -->
+        <button data-nav="excerpts" class="nav-tab-btn group flex flex-col items-center py-1 rounded-xl transition text-inkLight">
+          <div class="nav-icon-wrap w-10 h-7 rounded-full flex items-center justify-center transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+            </svg>
+          </div>
+          <span class="text-[11px] font-medium mt-0.5">文摘</span>
+        </button>
+
+        <!-- Tab 2: 作品墙 (默认主Tab) -->
+        <button data-nav="journal" class="nav-tab-btn active group flex flex-col items-center py-1 rounded-xl transition text-sageDark">
+          <div class="nav-icon-wrap w-10 h-7 rounded-full bg-sage/20 flex items-center justify-center transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+          </div>
+          <span class="text-[11px] font-bold mt-0.5">作品墙</span>
+        </button>
+
+        <!-- Tab 3: 耐丑训练 -->
+        <button data-nav="training" class="nav-tab-btn relative group flex flex-col items-center py-1 rounded-xl transition text-inkLight">
+          <span id="nav-training-running-dot" class="hidden absolute top-1 right-6 w-2 h-2 rounded-full bg-warmOrange animate-ping"></span>
+          <div class="nav-icon-wrap w-10 h-7 rounded-full flex items-center justify-center transition">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
+            </svg>
+          </div>
+          <span class="text-[11px] font-medium mt-0.5">耐丑训练</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- ======================= 弹窗 1：松鸦打气站（画坊话签罐弹窗） ======================= -->
+    <div id="modal-cheer" class="hidden absolute inset-0 z-50 bg-ink/50 backdrop-blur-[2px] flex items-center justify-center p-5">
+      <div class="relative w-full max-w-xs bg-[#FFFDF9] rounded-3xl p-6 border-2 border-[#C9A87C] shadow-2xl text-center space-y-4">
+        <div class="washi-tape bg-[#E8C4C4] -top-3 left-1/2 -translate-x-1/2"></div>
+        <div class="w-12 h-12 mx-auto rounded-full bg-[#F2E2A8] border border-[#C9A87C] flex items-center justify-center text-2xl">
+          🐦
+        </div>
+        <p class="text-[11px] text-inkLight tracking-widest">—— 松鸦店长叼来一张纸条 ——</p>
+        <p id="cheer-quote-text" class="font-display text-base text-ink leading-relaxed px-1">
+          “画得不像又怎样？毕加索花了一辈子才学会像孩子一样画画。”
+        </p>
+        <div class="pt-2 flex gap-2">
+          <button id="btn-another-cheer" class="flex-1 py-2 rounded-xl bg-[#F2ECE1] border border-[#D9C4A0] text-xs font-medium text-ink active:scale-95 transition">
+            再抽一张 🎲
+          </button>
+          <button id="btn-close-cheer" class="btn-3d flex-1 py-2 rounded-xl bg-sage text-white text-xs font-medium shadow-sage">
+            被安慰到了 💛
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================= 弹窗 2：训练完成盖章 & 撒花闭环弹窗 ======================= -->
+    <div id="modal-training-done" class="hidden absolute inset-0 z-50 bg-ink/60 backdrop-blur-sm flex items-center justify-center p-5">
+      <!-- 撒花 Canvas 覆盖层 -->
+      <canvas id="confetti-canvas" class="pointer-events-none absolute inset-0 w-full h-full z-10"></canvas>
+
+      <div class="relative z-20 w-full max-w-sm bg-[#FFFDF9] rounded-3xl p-5 border-2 border-[#C9A87C] shadow-2xl space-y-4 text-center">
+        <!-- 印章大徽章 -->
+        <div class="relative mx-auto w-24 h-24 rounded-full border-4 border-tomato flex flex-col items-center justify-center text-tomato animate-stamp shadow-stamp bg-[#FAF7F0]">
+          <span class="text-[10px] font-bold tracking-widest">松鸦画坊</span>
+          <span id="done-stamp-title" class="font-display text-base leading-tight my-0.5">今日动笔</span>
+          <span id="done-stamp-count" class="text-[10px] border-t border-tomato/50 pt-0.5">今日第 1 章</span>
+        </div>
+
+        <div class="space-y-1">
+          <div id="done-overtime-badge" class="hidden inline-block px-3 py-0.5 rounded-full bg-[#F2E2A8] border border-warmOrange text-tomato text-xs font-bold">
+            🌟 超常营业达成！
+          </div>
+          <h3 id="done-praise-title" class="font-display text-lg text-ink">太棒了！你又战胜了白纸！</h3>
+          <p id="done-praise-desc" class="text-xs text-inkLight leading-relaxed">
+            拍下刚才画的速写贴上作品墙吧，不管长啥样都是今天独一无二的痕迹。
+          </p>
+        </div>
+
+        <!-- 拍照打卡上传区 -->
+        <div class="bg-[#FAF7F0] rounded-2xl p-3 border border-dashed border-[#C9A87C] space-y-2.5 text-left">
+          <div id="done-photo-preview-box" class="hidden relative">
+            <img id="done-photo-preview" src="" class="w-full h-36 object-cover rounded-xl border border-[#C9A87C]" />
+            <button id="btn-remove-done-photo" class="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-tomato text-white text-xs">✕</button>
+          </div>
+
+          <label id="done-upload-label" class="cursor-pointer w-full py-2.5 rounded-xl bg-[#F2ECE1] hover:bg-[#D9C4A0]/60 border border-[#C9A87C] flex items-center justify-center gap-1.5 text-xs font-medium text-ink transition">
+            <span>📸</span>
+            <span id="done-photo-btn-text">立即拍照 / 选速写图打卡 (必传)</span>
+            <input id="input-done-photo" type="file" accept="image/*" capture="environment" class="hidden" />
+          </label>
+
+          <input 
+            id="done-note-input" 
+            type="text" 
+            placeholder="顺便记一句刚才画画的感受..." 
+            class="w-full px-3 py-2 rounded-xl bg-white border border-[#D9C4A0] text-xs text-ink focus:outline-none focus:border-sage"
+          />
+        </div>
+
+        <div class="flex gap-2.5">
+          <button id="btn-skip-checkin" class="py-2.5 px-3 rounded-xl bg-[#F2ECE1] text-inkLight text-xs font-medium">
+            仅记次数
+          </button>
+          <button id="btn-confirm-checkin" class="btn-3d flex-1 py-2.5 rounded-xl bg-warmOrange text-white text-xs font-bold shadow-orange">
+            贴上【作品墙】💮
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================= 弹窗 3：小红书 3:4 分享海报生成弹窗 (支持留白/铺满 + 3种底纸) ======================= -->
+    <div id="modal-poster" class="hidden absolute inset-0 z-50 bg-ink/70 backdrop-blur-sm flex flex-col items-center justify-center p-3 sm:p-4">
+      <div class="w-full max-w-xs max-h-[94dvh] overflow-y-auto no-scrollbar bg-[#FAF7F0] rounded-3xl p-4 border-2 border-[#C9A87C] shadow-2xl flex flex-col items-center space-y-2.5">
+        <div class="w-full flex items-center justify-between shrink-0">
+          <div class="flex items-center gap-1.5">
+            <span class="font-display text-sm text-ink">📕 小红书 3:4 纯享画作卡</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-[#F2E2A8] text-ink border border-[#C9A87C]">大图版</span>
+          </div>
+          <button id="btn-close-poster" class="w-7 h-7 rounded-full bg-[#F2ECE1] text-ink text-xs">✕</button>
+        </div>
+
+        <!-- 海报样式自定义栏（留白/铺满 + 3种画框底色） -->
+        <div class="w-full flex items-center justify-between gap-2 py-1.5 px-2 rounded-xl bg-[#F2ECE1] border border-[#D9C4A0] text-[11px] shrink-0">
+          <div class="flex items-center gap-1 bg-[#FAF7F0] p-0.5 rounded-lg border border-[#D9C4A0]">
+            <button id="btn-poster-contain" type="button" class="px-2 py-0.5 rounded-md bg-sage text-white font-medium transition">完整留白</button>
+            <button id="btn-poster-cover" type="button" class="px-2 py-0.5 rounded-md text-inkLight transition">铺满画框</button>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="text-inkLight">底纸:</span>
+            <button type="button" data-ptheme="oat" class="poster-theme-btn w-4 h-4 rounded-full bg-[#FAF7F0] ring-2 ring-sage" title="燕麦白"></button>
+            <button type="button" data-ptheme="kraft" class="poster-theme-btn w-4 h-4 rounded-full bg-[#EFE2CC] border border-[#C9A87C]" title="复古牛皮纸"></button>
+            <button type="button" data-ptheme="sage" class="poster-theme-btn w-4 h-4 rounded-full bg-[#E3ECE0] border border-[#8A9A7B]" title="鼠尾草绿"></button>
+          </div>
+        </div>
+
+        <!-- 海报预览图（由 Canvas 2D 原生绘制后转为 DataURL 展示，支持长按保存） -->
+        <div class="w-full aspect-[3/4] rounded-xl overflow-hidden border border-[#D9C4A0] shadow-inner bg-[#F2ECE1] flex items-center justify-center shrink-0">
+          <img id="poster-preview-img" src="" alt="小红书分享海报" class="w-full h-full object-contain" />
+        </div>
+
+        <!-- 小红书配套文案预览与一键复制区 -->
+        <div class="w-full bg-[#FFFDF9] rounded-2xl p-2.5 border border-[#D9C4A0] space-y-1.5 shrink-0">
+          <div class="flex items-center justify-between">
+            <span class="text-[11px] font-medium text-ink flex items-center gap-1">
+              <span>📝</span>
+              <span>小红书笔记配文（含完整正文与标签）</span>
+            </span>
+            <button id="btn-copy-xhs-text" class="px-2.5 py-1 rounded-lg bg-sage hover:bg-sageDark text-white text-[11px] font-medium active:scale-95 transition flex items-center gap-1">
+              <span>📋 复制全文</span>
+            </button>
+          </div>
+          <textarea 
+            id="poster-copy-textarea" 
+            rows="3" 
+            readonly
+            class="w-full text-[11px] text-inkLight bg-[#FAF7F0] rounded-xl p-2 border border-[#D9C4A0]/60 focus:outline-none resize-none leading-relaxed no-scrollbar"
+          ></textarea>
+        </div>
+
+        <div class="w-full flex gap-2 shrink-0">
+          <button id="btn-copy-xhs-main" class="btn-3d flex-1 py-2.5 rounded-xl bg-sage hover:bg-sageDark text-white text-xs font-medium shadow-sage flex items-center justify-center gap-1">
+            <span>📋 复制配文</span>
+          </button>
+          <button id="btn-download-poster" class="btn-3d flex-1 py-2.5 rounded-xl bg-tomato hover:bg-warmOrange text-white text-xs font-medium shadow-orange flex items-center justify-center gap-1">
+            <span>⬇️ 保存海报</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================= 弹窗 4：数据备份与恢复弹窗 ======================= -->
+    <div id="modal-backup" class="hidden absolute inset-0 z-50 bg-ink/50 backdrop-blur-[2px] flex items-center justify-center p-5">
+      <div class="w-full max-w-xs bg-[#FFFDF9] rounded-3xl p-5 border-2 border-[#C9A87C] shadow-2xl space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="font-display text-base text-ink">📦 画坊数据备份与恢复</h3>
+          <button id="btn-close-backup" class="w-7 h-7 rounded-full bg-[#F2ECE1] text-ink text-xs">✕</button>
+        </div>
+        <p class="text-xs text-inkLight leading-relaxed">
+          所有上墙画作（Blob二进制压缩）与文摘均安全存储在你的浏览器本地 IndexedDB 中，不上传任何服务器。定期导出备份可防清理丢失。
+        </p>
+        <div id="storage-stats" class="p-3 rounded-xl bg-[#FAF7F0] border border-[#D9C4A0] text-xs text-ink space-y-1">
+          <div>🖼️ 上墙画作：<span id="stat-journal-count" class="font-bold">0</span> 幅</div>
+          <div>🔖 摘抄句子：<span id="stat-excerpt-count" class="font-bold">0</span> 条</div>
+          <div>💮 今日训练：<span id="stat-training-count" class="font-bold">0</span> 次</div>
+        </div>
+        <div class="space-y-2">
+          <button id="btn-export-json" class="btn-3d w-full py-2.5 rounded-xl bg-sage text-white text-xs font-medium shadow-sage flex items-center justify-center gap-1.5">
+            <span>📤 导出全部画坊备份 (.json)</span>
+          </button>
+          <label class="cursor-pointer w-full py-2.5 rounded-xl bg-[#F2ECE1] hover:bg-[#D9C4A0]/60 border border-[#C9A87C] text-xs font-medium text-ink flex items-center justify-center gap-1.5 transition">
+            <span>📥 从备份文件恢复数据</span>
+            <input id="input-import-json" type="file" accept="application/json" class="hidden" />
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======================= 弹窗 5：作品墙卡片二次编辑弹窗 ======================= -->
+    <div id="modal-edit-record" class="hidden absolute inset-0 z-50 bg-ink/55 backdrop-blur-[2px] flex items-center justify-center p-5">
+      <div class="w-full max-w-xs bg-[#FFFDF9] rounded-3xl p-5 border-2 border-[#C9A87C] shadow-2xl space-y-3.5">
+        <div class="flex items-center justify-between">
+          <h3 class="font-display text-base text-ink">✏️ 编辑画作碎碎念与标签</h3>
+          <button id="btn-close-edit-record" class="w-7 h-7 rounded-full bg-[#F2ECE1] text-ink text-xs">✕</button>
+        </div>
+        <input type="hidden" id="edit-record-id" />
+        <textarea 
+          id="edit-record-content" 
+          rows="3" 
+          placeholder="修改关于这幅画的碎碎念..." 
+          class="w-full rounded-xl p-2.5 text-xs bg-[#FAF7F0] border border-[#D9C4A0] text-ink focus:outline-none focus:border-sage resize-none leading-relaxed"
+        ></textarea>
+        <div class="space-y-1.5">
+          <span class="text-[11px] text-inkLight block">点选或增删标签：</span>
+          <div id="edit-record-tags-wrap" class="flex flex-wrap gap-1.5"></div>
+          <div class="flex gap-1.5 pt-1">
+            <input id="edit-custom-tag-input" type="text" placeholder="自定义标签 (如 水彩练习)" class="flex-1 px-2.5 py-1.5 rounded-xl bg-[#FAF7F0] border border-[#D9C4A0] text-xs text-ink focus:outline-none focus:border-sage" />
+            <button id="btn-add-custom-tag" type="button" class="px-3 py-1.5 rounded-xl bg-[#F2ECE1] border border-[#C9A87C] text-xs font-medium text-ink">＋添加</button>
+          </div>
+        </div>
+        <button id="btn-save-edit-record" class="btn-3d w-full py-2.5 rounded-xl bg-sage text-white text-xs font-medium shadow-sage">
+          保存修改 💮
+        </button>
+      </div>
+    </div>
+
+    <!-- ======================= 弹窗 6：画作全屏高清预览灯箱 (Lightbox) ======================= -->
+    <div id="modal-lightbox" class="hidden absolute inset-0 z-50 bg-black/85 backdrop-blur-xs flex flex-col items-center justify-center p-4 cursor-zoom-out">
+      <img id="lightbox-img" src="" alt="画作全屏预览" class="hidden max-w-full max-h-[78dvh] rounded-2xl shadow-2xl object-contain bg-[#FFFDF9] p-2 border-2 border-[#C9A87C]" />
+      <div id="lightbox-svg-box" class="hidden w-72 h-72 rounded-2xl bg-[#FAF7F0] p-4 border-2 border-[#C9A87C] shadow-2xl items-center justify-center"></div>
+      <p id="lightbox-caption" class="mt-3 text-xs text-[#FAF7F0]/90 text-center max-w-xs line-clamp-2"></p>
+      <span class="mt-1 text-[11px] text-[#FAF7F0]/50">轻触任意位置关闭</span>
+    </div>
+
+    <!-- 轻提示 Toast -->
+    <div id="toast-box" class="pointer-events-none fixed sm:absolute top-14 left-1/2 -translate-x-1/2 z-50 opacity-0 -translate-y-2 transition-all duration-300 bg-[#4A4238] text-[#FAF7F0] text-xs px-4 py-2 rounded-full shadow-lg border border-[#C9A87C] flex items-center gap-1.5">
+      <span id="toast-icon">💮</span>
+      <span id="toast-msg">操作成功</span>
+    </div>
+
+  </div>
+
+  <script>
+    /*************************************************************************
+     * 一、本地内置数据库：松鸦打气语录、内置参考画题（纯本地SVG）、内置画题句库
+     *************************************************************************/
+    const CHEER_QUOTES = [
+      "松鸦店长叼来一张纸条：画得不像又怎样？毕加索花了一辈子才学会像孩子一样画画。",
+      "白纸不可怕，先在角落画个歪歪扭扭的太阳，你就破冰成功了！",
+      "线条抖动不叫基本功差，那叫「手绘感与呼吸感」✨",
+      "今天能推开木屋门进来随便画两笔，你已经赢过99%还在焦虑的人。",
+      "成年人画画不是为了考美院，是为了让大脑放个假🍵",
+      "画歪了？贴张和纸胶带或者写句吐槽，它就是最酷的原作！",
+      "世界上已经有照相机了，你的画笔只需要负责记录开心。",
+      "五分钟画个丑杯子，也是今天闪闪发光的创造时刻💮"
+    ];
+
+    // 本地内置参考图库（使用精致手绘感 SVG，100% 离线零网络依赖）
+    const BUILTIN_REF_IMAGES = [
+      {
+        title: "热气腾腾的手冲咖啡杯",
+        tip: "观察提示：杯身是一个梯形，把手是半个圆环，上面飘三根波浪热气线。",
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 220" fill="none">
+          <rect width="280" height="220" rx="16" fill="#FAF7F0"/>
+          <ellipse cx="135" cy="182" rx="68" ry="12" fill="#E8DFD1"/>
+          <path d="M92 50 C88 36, 102 28, 96 14" stroke="#C9A87C" stroke-width="3.5" stroke-linecap="round"/>
+          <path d="M132 46 C128 32, 142 24, 136 10" stroke="#C9A87C" stroke-width="3.5" stroke-linecap="round"/>
+          <path d="M168 52 C164 38, 178 30, 172 16" stroke="#C9A87C" stroke-width="3.5" stroke-linecap="round"/>
+          <path d="M182 92 H208 C222 92, 226 138, 204 142 H176" stroke="#4A4238" stroke-width="5" stroke-linecap="round" fill="none"/>
+          <path d="M76 74 H194 L178 168 C176 176, 168 180, 158 180 H112 C102 180, 94 176, 92 168 Z" fill="#E08A4B" stroke="#4A4238" stroke-width="4.5" stroke-linejoin="round"/>
+          <ellipse cx="135" cy="74" rx="59" ry="11" fill="#F2E2A8" stroke="#4A4238" stroke-width="4.5"/>
+          <ellipse cx="135" cy="75" rx="46" ry="6" fill="#6B4F35"/>
+          <path d="M112 115 Q135 128 158 115" stroke="#FAF7F0" stroke-width="3.5" stroke-linecap="round"/>
+          <circle cx="118" cy="102" r="3.5" fill="#4A4238"/>
+          <circle cx="152" cy="102" r="3.5" fill="#4A4238"/>
+        </svg>`
+      },
+      {
+        title: "窗台上的圆肚多肉盆栽",
+        tip: "观察提示：花盆是倒梯形，多肉叶片像一瓣一瓣圆润的小水滴叠在一起。",
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 220" fill="none">
+          <rect width="280" height="220" rx="16" fill="#FAF7F0"/>
+          <ellipse cx="140" cy="188" rx="64" ry="10" fill="#E8DFD1"/>
+          <path d="M140 42 C118 65, 114 96, 140 108 C166 96, 162 65, 140 42 Z" fill="#8A9A7B" stroke="#4A4238" stroke-width="4"/>
+          <path d="M96 66 C85 92, 98 112, 128 112 C126 88, 115 72, 96 66 Z" fill="#6B7F5E" stroke="#4A4238" stroke-width="4"/>
+          <path d="M184 66 C195 92, 182 112, 152 112 C154 88, 165 72, 184 66 Z" fill="#6B7F5E" stroke="#4A4238" stroke-width="4"/>
+          <path d="M76 94 C72 114, 96 126, 122 118" fill="#8A9A7B" stroke="#4A4238" stroke-width="4" stroke-linecap="round"/>
+          <path d="M204 94 C208 114, 184 126, 158 118" fill="#8A9A7B" stroke="#4A4238" stroke-width="4" stroke-linecap="round"/>
+          <rect x="84" y="112" width="112" height="18" rx="6" fill="#D9C4A0" stroke="#4A4238" stroke-width="4"/>
+          <path d="M92 130 H188 L174 184 H106 Z" fill="#C9A87C" stroke="#4A4238" stroke-width="4" stroke-linejoin="round"/>
+          <circle cx="126" cy="152" r="3" fill="#4A4238"/>
+          <circle cx="154" cy="152" r="3" fill="#4A4238"/>
+          <path d="M134 160 Q140 166 146 160" stroke="#4A4238" stroke-width="3" stroke-linecap="round"/>
+        </svg>`
+      },
+      {
+        title: "荷包蛋烤吐司切片",
+        tip: "观察提示：吐司是带圆角的方块，顶部鼓起两个小山包，中间画个不规则的云朵蛋白。",
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 220" fill="none">
+          <rect width="280" height="220" rx="16" fill="#FAF7F0"/>
+          <path d="M78 84 C64 60, 102 36, 140 50 C178 36, 216 60, 202 84 L198 172 C198 182, 188 188, 176 188 H104 C92 188, 82 182, 82 172 Z" fill="#C9A87C" stroke="#4A4238" stroke-width="4.5" stroke-linejoin="round"/>
+          <path d="M88 88 C78 68, 108 48, 140 60 C172 48, 202 68, 192 88 L188 166 C188 174, 180 178, 170 178 H110 C100 178, 92 174, 92 166 Z" fill="#F2E2A8"/>
+          <path d="M108 104 C98 118, 102 148, 124 152 C142 156, 168 158, 174 136 C180 114, 162 92, 142 94 C126 96, 116 92, 108 104 Z" fill="#FFFDF9" stroke="#4A4238" stroke-width="4"/>
+          <circle cx="140" cy="126" r="18" fill="#E08A4B" stroke="#4A4238" stroke-width="3.5"/>
+          <circle cx="134" cy="120" r="5" fill="#FFFDF9"/>
+        </svg>`
+      },
+      {
+        title: "趴在软垫上打盹的橘猫背影",
+        tip: "观察提示：身体就是一个大糯米团子（椭圆），加上两个三角形耳朵和一根弯尾巴。",
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 220" fill="none">
+          <rect width="280" height="220" rx="16" fill="#FAF7F0"/>
+          <ellipse cx="140" cy="168" rx="88" ry="24" fill="#E8C4C4" stroke="#4A4238" stroke-width="4"/>
+          <path d="M84 148 C78 96, 122 82, 160 88 C194 94, 206 124, 196 154 C188 168, 92 168, 84 148 Z" fill="#E08A4B" stroke="#4A4238" stroke-width="4.5"/>
+          <circle cx="112" cy="96" r="28" fill="#E08A4B" stroke="#4A4238" stroke-width="4.5"/>
+          <polygon points="88,78 94,52 112,72" fill="#E08A4B" stroke="#4A4238" stroke-width="4" stroke-linejoin="round"/>
+          <polygon points="118,70 134,50 138,78" fill="#E08A4B" stroke="#4A4238" stroke-width="4" stroke-linejoin="round"/>
+          <path d="M192 148 C222 148, 232 122, 214 112" stroke="#E08A4B" stroke-width="12" stroke-linecap="round"/>
+          <path d="M192 148 C222 148, 232 122, 214 112" stroke="#4A4238" stroke-width="4" stroke-linecap="round"/>
+          <path d="M148 92 V112 M164 96 V118" stroke="#6B4F35" stroke-width="4" stroke-linecap="round"/>
+          <text x="155" y="64" fill="#8A9A7B" font-size="18" font-weight="bold">Zzz...</text>
+        </svg>`
+      },
+      {
+        title: "复古黄铜小台灯",
+        tip: "观察提示：灯罩是梯形，灯杆是一根直线，底座是扁椭圆，结构极简好上手！",
+        svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 220" fill="none">
+          <rect width="280" height="220" rx="16" fill="#FAF7F0"/>
+          <polygon points="96,105 184,105 215,185 65,185" fill="#F2E2A8" opacity="0.45"/>
+          <rect x="135" y="98" width="10" height="76" fill="#C9A87C" stroke="#4A4238" stroke-width="4"/>
+          <ellipse cx="140" cy="180" rx="44" ry="12" fill="#C9A87C" stroke="#4A4238" stroke-width="4"/>
+          <path d="M104 42 H176 L198 102 H82 Z" fill="#8A9A7B" stroke="#4A4238" stroke-width="4.5" stroke-linejoin="round"/>
+          <circle cx="162" cy="116" r="5" fill="#E08A4B" stroke="#4A4238" stroke-width="3"/>
+          <line x1="162" y1="102" x2="162" y2="112" stroke="#4A4238" stroke-width="3"/>
+        </svg>`
+      }
+    ];
+
+    // 内置一句话画图句库
+    const BUILTIN_SENTENCES = [
+      { content: "一只拒绝上班、决定在吐司面包上睡午觉的橘猫", source: "松鸦画坊话签罐" },
+      { content: "下雨天撑着荷叶伞等公交车的小青蛙", source: "松鸦画坊话签罐" },
+      { content: "把今天所有的坏情绪都塞进垃圾桶，长出了一朵小红花", source: "反焦虑速写题" },
+      { content: "书桌上喝了一半的冰美式，冰块正在偷偷融化", source: "日常小物观察" },
+      { content: "戴着毛线帽去森林里捡松果的小松鸦", source: "松鸦画坊话签罐" },
+      { content: "微风吹过窗台，窗帘和蒲公英一起晃了晃", source: "松弛感练习" }
+    ];
+
+    /*************************************************************************
+     * 二、IndexedDB 本地存储封装（直接存 Blob 二进制图片，严禁 Base64 膨胀）
+     *************************************************************************/
+    const DB_NAME = 'ChillSketchHubDB';
+    const DB_VERSION = 1;
+    let dbInstance = null;
+
+    function openDatabase() {
+      return new Promise((resolve, reject) => {
+        if (dbInstance) return resolve(dbInstance);
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains('records')) {
+            db.createObjectStore('records', { keyPath: 'id' });
+          }
+          if (!db.objectStoreNames.contains('excerpts')) {
+            db.createObjectStore('excerpts', { keyPath: 'id' });
+          }
+          if (!db.objectStoreNames.contains('trainingProgress')) {
+            db.createObjectStore('trainingProgress', { keyPath: 'dateKey' });
+          }
+        };
+        request.onsuccess = (e) => {
+          dbInstance = e.target.result;
+          resolve(dbInstance);
+        };
+        request.onerror = (e) => reject(e.target.error);
+      });
+    }
+
+    async function dbGetAll(storeName) {
+      const db = await openDatabase();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, 'readonly');
+        const req = tx.objectStore(storeName).getAll();
+        req.onsuccess = () => resolve(req.result || []);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function dbPut(storeName, item) {
+      const db = await openDatabase();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, 'readwrite');
+        const req = tx.objectStore(storeName).put(item);
+        req.onsuccess = () => resolve(item);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function dbDelete(storeName, key) {
+      const db = await openDatabase();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, 'readwrite');
+        const req = tx.objectStore(storeName).delete(key);
+        req.onsuccess = () => resolve();
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function dbGet(storeName, key) {
+      const db = await openDatabase();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, 'readonly');
+        const req = tx.objectStore(storeName).get(key);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    /*************************************************************************
+     * 三、Web Worker 前端图片压缩（OffscreenCanvas + createImageBitmap + Blob）
+     *************************************************************************/
+    const workerCode = `
+      self.onmessage = async (e) => {
+        const { file, maxSide = 1080, quality = 0.75 } = e.data;
+        try {
+          // createImageBitmap 在现代浏览器自动识别并矫正 EXIF 旋转方向
+          const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' });
+          let width = bitmap.width;
+          let height = bitmap.height;
+          if (width > maxSide || height > maxSide) {
+            if (width >= height) {
+              height = Math.round((height * maxSide) / width);
+              width = maxSide;
+            } else {
+              width = Math.round((width * maxSide) / height);
+              height = maxSide;
+            }
+          }
+          if (typeof OffscreenCanvas !== 'undefined') {
+            const canvas = new OffscreenCanvas(width, height);
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(bitmap, 0, 0, width, height);
+            bitmap.close();
+            let blob;
+            try {
+              blob = await canvas.convertToBlob({ type: 'image/webp', quality });
+            } catch (_) {
+              blob = await canvas.convertToBlob({ type: 'image/jpeg', quality });
+            }
+            self.postMessage({ ok: true, blob, width, height });
+          } else {
+            self.postMessage({ ok: false, fallback: true });
+          }
+        } catch (err) {
+          self.postMessage({ ok: false, error: err.message });
+        }
+      };
+    `;
+    const workerBlob = new Blob([workerCode], { type: 'application/javascript' });
+    const imageWorker = new Worker(URL.createObjectURL(workerBlob));
+
+    // 主线程兜底压缩（当部分旧设备不支持 OffscreenCanvas 时自动切换）
+    function compressImageFallback(file, maxSide = 1080, quality = 0.75) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        const url = URL.createObjectURL(file);
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          let w = img.width;
+          let h = img.height;
+          if (w > maxSide || h > maxSide) {
+            if (w >= h) { h = Math.round((h * maxSide) / w); w = maxSide; }
+            else { w = Math.round((w * maxSide) / h); h = maxSide; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w;
+          canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, w, h);
+          canvas.toBlob((blob) => resolve(blob || file), 'image/webp', quality);
+        };
+        img.onerror = reject;
+        img.src = url;
+      });
+    }
+
+    function compressImageToBlob(file) {
+      return new Promise((resolve) => {
+        const handler = async (e) => {
+          imageWorker.removeEventListener('message', handler);
+          if (e.data && e.data.ok && e.data.blob) {
+            resolve(e.data.blob);
+          } else {
+            const fallbackBlob = await compressImageFallback(file);
+            resolve(fallbackBlob);
+          }
+        };
+        imageWorker.addEventListener('message', handler);
+        imageWorker.postMessage({ file, maxSide: 1080, quality: 0.75 });
+      });
+    }
+
+    // 纸面提亮滤镜：针对手机夜晚拍摄画纸发灰，一键提升亮度与对比度
+    function applyBrightenFilterToBlob(sourceBlob) {
+      return new Promise((resolve) => {
+        const url = URL.createObjectURL(sourceBlob);
+        const img = new Image();
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          const ctx = canvas.getContext('2d');
+          ctx.filter = 'brightness(1.1) contrast(1.16) saturate(1.04)';
+          ctx.drawImage(img, 0, 0);
+          canvas.toBlob((newBlob) => resolve(newBlob || sourceBlob), 'image/webp', 0.82);
+        };
+        img.onerror = () => {
+          URL.revokeObjectURL(url);
+          resolve(sourceBlob);
+        };
+        img.src = url;
+      });
+    }
+
+    // SVG 字符串转 Blob 辅助函数（用于默认种子数据演示）
+    function svgToBlob(svgString) {
+      return new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+    }
+
+    /*************************************************************************
+     * 四、全局应用状态与工具函数
+     *************************************************************************/
+    const state = {
+      activeTab: 'journal',           // 'journal' | 'training' | 'excerpts' | 'guide'
+      records: [],                    // 作品墙列表
+      excerpts: [],                   // 文摘列表
+      todayCount: 0,                  // 今日已完成耐丑训练次数（不封顶）
+      journalSearchQuery: '',
+      journalSelectedFilterTag: 'ALL',
+      composerSelectedTags: new Set(['#日常涂鸦']),
+      composerRawBlob: null,
+      composerImageBlob: null,
+      composerBrightened: false,
+      editingRecordId: null,
+      editingRecordTags: new Set(),
+      excerptSearchQuery: '',
+      excerptSelectedFilter: 'ALL',
+      excerptFormTags: new Set(['#好词好句']),
+      // 分享海报定制状态
+      currentPosterRecord: null,
+      posterFitMode: 'contain',       // 'contain' | 'cover'
+      posterTheme: 'oat',             // 'oat' | 'kraft' | 'sage'
+      // 耐丑训练状态
+      trainingMode: 'image',          // 'image' | 'sentence'
+      trainingRunning: false,
+      currentRefIndex: 0,
+      customRefBlob: null,
+      currentSentence: BUILTIN_SENTENCES[0],
+      timerDeadline: 0,               // 截止时间戳（毫秒）
+      timerRAF: null,
+      wakeLockSentinel: null,
+      doneCheckinBlob: null,
+    };
+
+    // 获取今日日期 Key (YYYY-MM-DD)
+    function getTodayDateKey(ts = Date.now()) {
+      const d = new Date(ts);
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    }
+
+    function formatFriendlyDate(dateKey) {
+      const today = getTodayDateKey();
+      const yesterday = getTodayDateKey(Date.now() - 86400000);
+      const parts = dateKey.split('-');
+      const label = `${parseInt(parts[1])}月${parseInt(parts[2])}日`;
+      if (dateKey === today) return `今天 · ${label}`;
+      if (dateKey === yesterday) return `昨天 · ${label}`;
+      return label;
+    }
+
+    function formatTimeHM(ts) {
+      const d = new Date(ts);
+      return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    }
+
+    // 轻提示 Toast
+    let toastTimer = null;
+    function showToast(msg, icon = '💮') {
+      const box = document.getElementById('toast-box');
+      document.getElementById('toast-icon').textContent = icon;
+      document.getElementById('toast-msg').textContent = msg;
+      box.classList.remove('opacity-0', '-translate-y-2');
+      box.classList.add('opacity-100', 'translate-y-0');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        box.classList.add('opacity-0', '-translate-y-2');
+        box.classList.remove('opacity-100', 'translate-y-0');
+      }, 2400);
+    }
+
+    // Web Audio API 温和盖章音效（作为 iOS 无 navigator.vibrate 的声音兜底）
+    function playStampSound(isCelebration = false) {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const now = ctx.currentTime;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        if (isCelebration) {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523.25, now);       // C5
+          osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+          osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+          osc.frequency.setValueAtTime(1046.5, now + 0.3); // C6
+          gain.gain.setValueAtTime(0.18, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.55);
+          osc.start(now);
+          osc.stop(now + 0.55);
+        } else {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(160, now);
+          osc.frequency.exponentialRampToValueAtTime(65, now + 0.12);
+          gain.gain.setValueAtTime(0.25, now);
+          gain.gain.exponentialRampToValueAtTime(0.01, now + 0.14);
+          osc.start(now);
+          osc.stop(now + 0.14);
+        }
+      } catch (_) {}
+    }
+
+    /*************************************************************************
+     * 五、首次进入注入温暖的种子手账与文摘（若本地为空）
+     *************************************************************************/
+    async function initSeedDataIfNeeded() {
+      const existingRecords = await dbGetAll('records');
+      const existingExcerpts = await dbGetAll('excerpts');
+      const todayKey = getTodayDateKey();
+
+      if (existingExcerpts.length === 0) {
+        const seedExcerpts = [
+          {
+            id: 'ex-seed-1',
+            content: '万事万物都有裂痕，那正是光照进来的地方。画歪的线条也是。',
+            source: '莱昂纳德·科恩（画坊改编）',
+            tags: ['#好词好句', '#放松'],
+            starred: true,
+            createdAt: Date.now() - 3600000 * 5
+          },
+          {
+            id: 'ex-seed-2',
+            content: '一只拒绝上班、决定在吐司面包上睡午觉的橘猫',
+            source: '松鸦画坊话签罐',
+            tags: ['#画题', '#放松'],
+            starred: true,
+            createdAt: Date.now() - 3600000 * 3
+          },
+          {
+            id: 'ex-seed-3',
+            content: '缓缓飘落的枫叶像思念，我点燃烛火温暖岁末的秋天。',
+            source: '《枫》歌词摘抄',
+            tags: ['#好词好句', '#画题'],
+            starred: false,
+            createdAt: Date.now() - 3600000 * 1
+          }
+        ];
+        for (const item of seedExcerpts) {
+          await dbPut('excerpts', item);
+        }
+      }
+
+      if (existingRecords.length === 0) {
+        // 制作一张可爱的手绘感杯子速写 SVG Blob 作为首条示例作品
+        const sampleSketchSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none">
+          <rect width="400" height="300" fill="#FFFDF9"/>
+          <path d="M40 250 Q200 245 360 252" stroke="#D9C4A0" stroke-width="3" stroke-linecap="round"/>
+          <path d="M135 110 L145 230 Q200 238 245 228 L255 112 Z" fill="#F2E2A8" stroke="#4A4238" stroke-width="4" stroke-linejoin="round"/>
+          <path d="M253 135 C288 135, 288 195, 248 198" stroke="#4A4238" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+          <ellipse cx="195" cy="110" rx="60" ry="12" fill="#FAF7F0" stroke="#4A4238" stroke-width="4"/>
+          <path d="M170 78 Q162 60 175 45" stroke="#E08A4B" stroke-width="3" stroke-linecap="round"/>
+          <path d="M205 75 Q198 55 210 40" stroke="#E08A4B" stroke-width="3" stroke-linecap="round"/>
+          <text x="152" y="178" fill="#4A4238" font-size="16" font-family="cursive">歪歪扭扭杯 :)</text>
+        </svg>`;
+
+        const sampleDoodleSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" fill="none">
+          <rect width="400" height="300" fill="#FFFDF9"/>
+          <circle cx="200" cy="145" r="68" fill="#F2E2A8" stroke="#4A4238" stroke-width="4"/>
+          <path d="M172 132 C175 124, 185 124, 188 132" stroke="#4A4238" stroke-width="4" stroke-linecap="round"/>
+          <path d="M212 132 C215 124, 225 124, 228 132" stroke="#4A4238" stroke-width="4" stroke-linecap="round"/>
+          <path d="M176 164 Q200 182 224 164" stroke="#D96B4A" stroke-width="4.5" stroke-linecap="round"/>
+          <path d="M85 235 C135 215, 265 245, 315 220" stroke="#8A9A7B" stroke-width="3.5" stroke-linecap="round"/>
+          <text x="150" y="258" fill="#7A6F63" font-size="15" font-family="cursive">今晚的解压笑脸太阳☀️</text>
+        </svg>`;
+
+        const seedRecord1 = {
+          id: 'rec-seed-1',
+          type: 'training',
+          mode: 'image',
+          content: '第一次在松鸦画坊挑战10分钟看图速写！以前总怕杯子画不对称，今天故意不改，发现歪歪扭扭的线条反而很有味道☕️',
+          imageBlob: svgToBlob(sampleSketchSvg),
+          tags: ['#耐丑打卡', '#日常涂鸦', '#生活小物'],
+          createdAt: Date.now() - 1800000,
+          dateKey: todayKey
+        };
+
+        const seedRecord2 = {
+          id: 'rec-seed-2',
+          type: 'journal',
+          mode: null,
+          content: '今天工作有点累，推门进松鸦画坊看了眼《反焦虑绘画指南》。决定今晚不刷短视频，随手画个歪歪扭扭的笑脸太阳就睡觉！',
+          imageBlob: svgToBlob(sampleDoodleSvg),
+          tags: ['#情绪宣泄', '#日常涂鸦'],
+          createdAt: Date.now() - 86400000,
+          dateKey: getTodayDateKey(Date.now() - 86400000)
+        };
+
+        await dbPut('records', seedRecord1);
+        await dbPut('records', seedRecord2);
+        await dbPut('trainingProgress', { dateKey: todayKey, count: 1 });
+      }
+    }
+
+    async function loadAllDataFromDB() {
+      await initSeedDataIfNeeded();
+      const records = await dbGetAll('records');
+      records.sort((a, b) => b.createdAt - a.createdAt);
+      state.records = records;
+
+      const excerpts = await dbGetAll('excerpts');
+      excerpts.sort((a, b) => b.createdAt - a.createdAt);
+      state.excerpts = excerpts;
+
+      const todayKey = getTodayDateKey();
+      const prog = await dbGet('trainingProgress', todayKey);
+      state.todayCount = prog ? prog.count : 0;
+
+      renderJournalFilterTags();
+      renderJournalTimeline();
+      renderExcerptsFilterBar();
+      renderExcerptsList();
+      updateBusinessSignUI();
+    }
+
+    /*************************************************************************
+     * 六、模块 2：作品墙 (JournalView) 渲染与交互（含防内存泄漏回收、二次编辑、防误删、灯箱）
+     *************************************************************************/
+    const activeBlobUrls = new Set();
+    function createManagedBlobUrl(blob) {
+      if (!blob) return '';
+      const url = URL.createObjectURL(blob);
+      activeBlobUrls.add(url);
+      return url;
+    }
+
+    function revokeTimelineBlobUrls() {
+      activeBlobUrls.forEach(u => URL.revokeObjectURL(u));
+      activeBlobUrls.clear();
+    }
+
+    function openLightboxImage(url, caption = '') {
+      if (!url) return;
+      const modal = document.getElementById('modal-lightbox');
+      const img = document.getElementById('lightbox-img');
+      const svgBox = document.getElementById('lightbox-svg-box');
+      svgBox.classList.add('hidden');
+      svgBox.classList.remove('flex');
+      img.src = url;
+      img.classList.remove('hidden');
+      document.getElementById('lightbox-caption').textContent = caption;
+      modal.classList.remove('hidden');
+    }
+
+    function openLightboxSvg(svgHtml, caption = '') {
+      const modal = document.getElementById('modal-lightbox');
+      const img = document.getElementById('lightbox-img');
+      const svgBox = document.getElementById('lightbox-svg-box');
+      img.classList.add('hidden');
+      svgBox.innerHTML = svgHtml;
+      svgBox.classList.remove('hidden');
+      svgBox.classList.add('flex');
+      document.getElementById('lightbox-caption').textContent = caption;
+      modal.classList.remove('hidden');
+    }
+
+    function renderJournalFilterTags() {
+      const container = document.getElementById('journal-filter-tags');
+      const allTags = new Set(['#日常涂鸦', '#耐丑打卡', '#一句话画图', '#情绪宣泄', '#生活小物']);
+      state.records.forEach(r => (r.tags || []).forEach(t => allTags.add(t)));
+
+      let html = `<button data-ftag="ALL" class="journal-ftag-btn shrink-0 text-[11px] px-2.5 py-1 rounded-full border transition ${
+        state.journalSelectedFilterTag === 'ALL'
+          ? 'bg-ink text-[#FAF7F0] border-ink font-medium'
+          : 'bg-[#FFFDF9] text-inkLight border-[#D9C4A0]'
+      }">全部画作</button>`;
+
+      allTags.forEach(tag => {
+        const active = state.journalSelectedFilterTag === tag;
+        html += `<button data-ftag="${tag}" class="journal-ftag-btn shrink-0 text-[11px] px-2.5 py-1 rounded-full border transition ${
+          active
+            ? 'bg-sage text-white border-sage font-medium'
+            : 'bg-[#FFFDF9] text-inkLight border-[#D9C4A0]'
+        }">${tag}</button>`;
+      });
+
+      container.innerHTML = html;
+      container.querySelectorAll('.journal-ftag-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.journalSelectedFilterTag = btn.dataset.ftag;
+          renderJournalFilterTags();
+          renderJournalTimeline();
+        });
+      });
+    }
+
+    function renderJournalTimeline() {
+      revokeTimelineBlobUrls();
+      const container = document.getElementById('journal-timeline');
+      const q = state.journalSearchQuery.trim().toLowerCase();
+      const ftag = state.journalSelectedFilterTag;
+
+      const filtered = state.records.filter(rec => {
+        const matchTag = ftag === 'ALL' || (rec.tags && rec.tags.includes(ftag));
+        if (!matchTag) return false;
+        if (!q) return true;
+        const inContent = (rec.content || '').toLowerCase().includes(q);
+        const inTags = (rec.tags || []).some(t => t.toLowerCase().includes(q));
+        return inContent || inTags;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="bg-[#FFFDF9] rounded-2xl p-8 border border-dashed border-[#C9A87C] text-center space-y-2">
+            <div class="text-3xl">🎨</div>
+            <p class="font-display text-sm text-ink">作品墙上还没有找到对应的画作</p>
+            <p class="text-xs text-inkLight">换个搜索词，或者在上方随便画两笔贴上墙吧~</p>
+          </div>
+        `;
+        return;
+      }
+
+      const groups = new Map();
+      filtered.forEach(rec => {
+        const dk = rec.dateKey || getTodayDateKey(rec.createdAt);
+        if (!groups.has(dk)) groups.set(dk, []);
+        groups.get(dk).push(rec);
+      });
+
+      let html = '';
+      const tapeColors = ['bg-[#8A9A7B]/65', 'bg-[#E8C4C4]/80', 'bg-[#F2E2A8]/90', 'bg-[#D9C4A0]/80'];
+      let cardIdx = 0;
+
+      for (const [dateKey, items] of groups.entries()) {
+        html += `
+          <div class="space-y-3">
+            <!-- 日期木牌分组头 -->
+            <div class="flex items-center gap-2">
+              <span class="px-3 py-1 rounded-lg bg-[#C9A87C]/30 border border-[#C9A87C] font-display text-xs text-ink">
+                📅 ${formatFriendlyDate(dateKey)}
+              </span>
+              <div class="flex-1 border-b border-dashed border-[#D9C4A0]"></div>
+              <span class="text-[11px] text-inkLight">${items.length} 幅</span>
+            </div>
+            <div class="space-y-4">
+        `;
+
+        items.forEach(rec => {
+          const tapeClass = tapeColors[cardIdx % tapeColors.length];
+          const rotClass = cardIdx % 2 === 0 ? 'rotate-[0.3deg]' : 'rotate-[-0.3deg]';
+          cardIdx++;
+
+          const imgUrl = rec.imageBlob ? createManagedBlobUrl(rec.imageBlob) : '';
+          const isTraining = rec.type === 'training';
+          const stampLabel = isTraining ? (rec.mode === 'sentence' ? '脑洞速写' : '耐丑速写') : '今日动笔';
+
+          html += `
+            <article class="relative bg-[#FFFDF9] rounded-2xl p-4 border border-[#D9C4A0] shadow-card ${rotClass} transition">
+              <!-- 顶部和纸胶带 -->
+              <div class="washi-tape ${tapeClass} -top-2.5 left-6"></div>
+
+              <!-- 红色印章角标 -->
+              <div class="absolute top-3 right-3 px-2 py-0.5 rounded border-2 border-tomato/80 text-tomato text-[10px] font-bold rotate-[-8deg] select-none">
+                💮 ${stampLabel}
+              </div>
+
+              <div class="text-[11px] text-inkLight mb-2 flex items-center gap-1.5">
+                <span>🕒 ${formatTimeHM(rec.createdAt)}</span>
+              </div>
+
+              ${imgUrl ? `
+                <div class="mb-3 rounded-xl overflow-hidden border border-[#D9C4A0] bg-[#FAF7F0] relative group cursor-zoom-in">
+                  <img src="${imgUrl}" data-lightbox-url="${imgUrl}" data-lightbox-cap="${escapeHtml(rec.content || '')}" loading="lazy" alt="上墙画作" class="journal-card-img w-full max-h-64 object-contain mx-auto" />
+                  <span class="pointer-events-none absolute bottom-1.5 right-2 bg-ink/55 text-[#FAF7F0] text-[10px] px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition">🔍 放大</span>
+                </div>
+              ` : ''}
+
+              ${rec.content ? `
+                <p class="text-sm text-ink leading-relaxed whitespace-pre-wrap break-words">${escapeHtml(rec.content)}</p>
+              ` : ''}
+
+              <!-- 标签与操作栏 -->
+              <div class="mt-3 pt-2.5 border-t border-dashed border-[#D9C4A0] flex items-center justify-between gap-2 flex-wrap">
+                <div class="flex items-center gap-1 flex-wrap">
+                  ${(rec.tags || []).map(t => `
+                    <span class="text-[11px] px-2 py-0.5 rounded-full bg-[#F2ECE1] text-sageDark font-medium">${escapeHtml(t)}</span>
+                  `).join('')}
+                </div>
+
+                <div class="flex items-center gap-1.5 ml-auto">
+                  <button data-edit-rec-id="${rec.id}" class="btn-edit-record text-[11px] text-inkLight hover:text-ink px-1.5 py-1 transition">
+                    ✏️ 编辑
+                  </button>
+                  <button data-delete-id="${rec.id}" class="btn-del-record text-[11px] text-inkLight hover:text-tomato px-1.5 py-1 rounded transition" title="删除记录">
+                    删除
+                  </button>
+                  <button data-share-id="${rec.id}" class="btn-share-record px-3 py-1 rounded-full bg-[#F2E2A8] hover:bg-[#ebd587] border border-[#C9A87C] text-ink text-[11px] font-medium flex items-center gap-1 active:scale-95 transition">
+                    <span>📕 生成分享图</span>
+                  </button>
+                </div>
+              </div>
+            </article>
+          `;
+        });
+
+        html += `</div></div>`;
+      }
+
+      container.innerHTML = html;
+
+      // 绑定图片点击灯箱放大
+      container.querySelectorAll('.journal-card-img').forEach(img => {
+        img.addEventListener('click', () => {
+          openLightboxImage(img.dataset.lightboxUrl, img.dataset.lightboxCap);
+        });
+      });
+
+      // 绑定编辑事件
+      container.querySelectorAll('.btn-edit-record').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const rec = state.records.find(r => r.id === btn.dataset.editRecId);
+          if (rec) openEditRecordModal(rec);
+        });
+      });
+
+      // 绑定生成分享图事件
+      container.querySelectorAll('.btn-share-record').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const rec = state.records.find(r => r.id === btn.dataset.shareId);
+          if (rec) openPosterModal(rec);
+        });
+      });
+
+      // 绑定防误删二次确认事件
+      container.querySelectorAll('.btn-del-record').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (btn.dataset.confirming !== 'true') {
+            btn.dataset.confirming = 'true';
+            btn.textContent = '确认取下?';
+            btn.classList.add('bg-tomato', 'text-white', 'px-2');
+            setTimeout(() => {
+              if (btn.isConnected && btn.dataset.confirming === 'true') {
+                btn.dataset.confirming = 'false';
+                btn.textContent = '删除';
+                btn.classList.remove('bg-tomato', 'text-white', 'px-2');
+              }
+            }, 3000);
+            return;
+          }
+          const id = btn.dataset.deleteId;
+          await dbDelete('records', id);
+          state.records = state.records.filter(r => r.id !== id);
+          renderJournalFilterTags();
+          renderJournalTimeline();
+          showToast('已从作品墙取下', '🗑️');
+        });
+      });
+    }
+
+    function openEditRecordModal(rec) {
+      state.editingRecordId = rec.id;
+      state.editingRecordTags = new Set(rec.tags || ['#日常涂鸦']);
+      document.getElementById('edit-record-id').value = rec.id;
+      document.getElementById('edit-record-content').value = rec.content || '';
+      document.getElementById('edit-custom-tag-input').value = '';
+      renderEditRecordTags();
+      document.getElementById('modal-edit-record').classList.remove('hidden');
+    }
+
+    function renderEditRecordTags() {
+      const wrap = document.getElementById('edit-record-tags-wrap');
+      const preset = new Set(['#日常涂鸦', '#耐丑打卡', '#一句话画图', '#情绪宣泄', '#生活小物']);
+      state.editingRecordTags.forEach(t => preset.add(t));
+      wrap.innerHTML = Array.from(preset).map(tag => {
+        const active = state.editingRecordTags.has(tag);
+        return `<button type="button" data-ertag="${escapeHtml(tag)}" class="edit-rec-tag-btn text-[11px] px-2.5 py-0.5 rounded-full border transition ${
+          active ? 'border-sage bg-sage text-white' : 'border-[#D9C4A0] bg-[#FAF7F0] text-inkLight'
+        }">${escapeHtml(tag)}</button>`;
+      }).join('');
+
+      wrap.querySelectorAll('.edit-rec-tag-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const t = btn.dataset.ertag;
+          if (state.editingRecordTags.has(t)) {
+            if (state.editingRecordTags.size > 1) state.editingRecordTags.delete(t);
+          } else {
+            state.editingRecordTags.add(t);
+          }
+          renderEditRecordTags();
+        });
+      });
+    }
+
+    function escapeHtml(str = '') {
+      return str.replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m]));
+    }
+
+    /*************************************************************************
+     * 七、Canvas 2D 原生绘制 3:4 小红书分享海报（支持留白/铺满 + 3种底纸 + 一键复制配文）
+     *************************************************************************/
+    function copyTextToClipboard(text) {
+      const tempArea = document.createElement('textarea');
+      tempArea.value = text;
+      tempArea.style.position = 'fixed';
+      tempArea.style.left = '-9999px';
+      tempArea.style.top = '0';
+      document.body.appendChild(tempArea);
+      tempArea.focus();
+      tempArea.select();
+      let success = false;
+      try {
+        success = document.execCommand('copy');
+      } catch (_) {
+        success = false;
+      }
+      document.body.removeChild(tempArea);
+      return success;
+    }
+
+    function buildXiaohongshuCopyText(record) {
+      const mainBody = (record.content || '今天在松鸦画坊随便画了两笔，留下一段轻松的手绘时光。').trim();
+      const userTags = (record.tags && record.tags.length ? record.tags : ['#日常涂鸦']).join(' ');
+      const extraTags = '#松鸦画坊 #随手画两笔 #日常速写 #每日动笔 #零基础画画';
+      return `${mainBody}\n\n💮 记录于「松鸦画坊 · Chill Sketch Hut」\n${userTags} ${extraTags}`;
+    }
+
+    async function openPosterModal(record) {
+      state.currentPosterRecord = record;
+      const modal = document.getElementById('modal-poster');
+      const copyTextarea = document.getElementById('poster-copy-textarea');
+      modal.classList.remove('hidden');
+
+      const fullXhsText = buildXiaohongshuCopyText(record);
+      copyTextarea.value = fullXhsText;
+
+      const handleCopyXhs = () => {
+        const ok = copyTextToClipboard(copyTextarea.value);
+        if (ok) {
+          showToast('配文已复制！快去小红书粘贴发布吧~', '📋');
+        } else {
+          copyTextarea.select();
+          showToast('请长按文本框选择复制', '📝');
+        }
+      };
+      document.getElementById('btn-copy-xhs-text').onclick = handleCopyXhs;
+      document.getElementById('btn-copy-xhs-main').onclick = handleCopyXhs;
+
+      await renderPosterCanvas();
+    }
+
+    async function renderPosterCanvas() {
+      const record = state.currentPosterRecord;
+      if (!record) return;
+      const previewImg = document.getElementById('poster-preview-img');
+
+      const themes = {
+        oat:   { bg: '#FAF7F0', dot: '#E5DAC8', card: '#FFFDF9', frame: '#FAF7F0', border: '#C9A87C' },
+        kraft: { bg: '#EFE2CC', dot: '#DECBB0', card: '#FAF3E6', frame: '#F2E6D2', border: '#B59264' },
+        sage:  { bg: '#E3ECE0', dot: '#C9D8C4', card: '#F9FCF8', frame: '#EDF3EB', border: '#8A9A7B' }
+      };
+      const pal = themes[state.posterTheme] || themes.oat;
+
+      const W = 900;
+      const H = 1200;
+      const canvas = document.createElement('canvas');
+      canvas.width = W;
+      canvas.height = H;
+      const ctx = canvas.getContext('2d');
+
+      // 1. 纸张底色 + 细腻点阵肌理
+      ctx.fillStyle = pal.bg;
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = pal.dot;
+      for (let x = 30; x < W; x += 36) {
+        for (let y = 30; y < H; y += 36) {
+          ctx.beginPath();
+          ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // 2. 外层木色大画框卡片
+      drawRoundedRect(ctx, 40, 44, W - 80, H - 88, 32, pal.card, pal.border, 4);
+
+      // 3. 顶部和纸胶带装饰
+      ctx.save();
+      ctx.translate(W / 2, 44);
+      ctx.rotate(-0.025);
+      ctx.fillStyle = 'rgba(138, 154, 123, 0.82)';
+      ctx.fillRect(-115, -18, 230, 38);
+      ctx.restore();
+
+      // 4. 紧凑精致的顶部画坊栏
+      ctx.fillStyle = '#4A4238';
+      ctx.font = 'bold 30px "Noto Sans SC", sans-serif';
+      ctx.fillText('松鸦画坊 · Chill Sketch Hut', 80, 118);
+
+      ctx.fillStyle = '#6B7F5E';
+      ctx.font = '22px "Noto Sans SC", sans-serif';
+      const dateStr = `${record.dateKey || getTodayDateKey(record.createdAt)} ${formatTimeHM(record.createdAt)}`;
+      ctx.textAlign = 'right';
+      ctx.fillText(`📅 ${dateStr}`, W - 80, 116);
+      ctx.textAlign = 'left';
+
+      // 5. 超大面积画作展示区（高度 840px，占比超 70%）
+      const boxX = 76;
+      const boxY = 146;
+      const boxW = W - 152;
+      const boxH = 840;
+
+      ctx.save();
+      ctx.shadowColor = 'rgba(74, 66, 56, 0.08)';
+      ctx.shadowBlur = 18;
+      ctx.shadowOffsetY = 6;
+      drawRoundedRect(ctx, boxX, boxY, boxW, boxH, 24, pal.frame, '#D9C4A0', 3);
+      ctx.restore();
+
+      if (record.imageBlob) {
+        try {
+          const img = await loadBlobToImage(record.imageBlob);
+          if (state.posterFitMode === 'cover') {
+            ctx.save();
+            ctx.beginPath();
+            ctx.roundRect(boxX + 12, boxY + 12, boxW - 24, boxH - 24, 18);
+            ctx.clip();
+            const scale = Math.max((boxW - 24) / img.width, (boxH - 24) / img.height);
+            const drawW = img.width * scale;
+            const drawH = img.height * scale;
+            const drawX = boxX + (boxW - drawW) / 2;
+            const drawY = boxY + (boxH - drawH) / 2;
+            ctx.drawImage(img, drawX, drawY, drawW, drawH);
+            ctx.restore();
+          } else {
+            const pad = 24;
+            const availW = boxW - pad * 2;
+            const availH = boxH - pad * 2;
+            const scale = Math.min(availW / img.width, availH / img.height);
+            const drawW = img.width * scale;
+            const drawH = img.height * scale;
+            const drawX = boxX + (boxW - drawW) / 2;
+            const drawY = boxY + (boxH - drawH) / 2;
+
+            drawRoundedRect(ctx, drawX - 6, drawY - 6, drawW + 12, drawH + 12, 12, '#FFFDF9', '#E8DFD1', 1.5);
+            ctx.drawImage(img, drawX, drawY, drawW, drawH);
+          }
+        } catch (_) {}
+      }
+
+      // 右上角莫兰迪粉边角贴纸
+      ctx.save();
+      ctx.translate(boxX + boxW - 22, boxY + 22);
+      ctx.rotate(0.65);
+      ctx.fillStyle = 'rgba(232, 196, 196, 0.78)';
+      ctx.fillRect(-55, -12, 110, 24);
+      ctx.restore();
+
+      // 6. 底部留白区：左侧展示话题标签胶囊 + 极简画坊寄语，右侧盖「今日动笔 · 松鸦画坊留念」印章
+      const footerY = 1022;
+      let tagX = 80;
+      const tags = record.tags && record.tags.length ? record.tags : ['#日常涂鸦'];
+      ctx.font = '22px "Noto Sans SC", sans-serif';
+      tags.forEach(tag => {
+        const tw = ctx.measureText(tag).width + 34;
+        if (tagX + tw < W - 260) {
+          drawRoundedRect(ctx, tagX, footerY, tw, 42, 21, '#F2ECE1', '#C9A87C', 1.5);
+          ctx.fillStyle = '#6B7F5E';
+          ctx.fillText(tag, tagX + 17, footerY + 29);
+          tagX += tw + 12;
+        }
+      });
+
+      ctx.fillStyle = '#7A6F63';
+      ctx.font = '22px "Noto Sans SC", sans-serif';
+      ctx.fillText('🌲 一间随时推门进来、随便画两笔的森林手作画坊', 80, H - 82);
+
+      // 7. 右下角红色印章（「今日动笔 · 松鸦画坊留念」）
+      ctx.save();
+      ctx.translate(W - 168, H - 122);
+      ctx.rotate(-0.12);
+      ctx.strokeStyle = '#D96B4A';
+      ctx.lineWidth = 3.5;
+      ctx.strokeRect(-76, -38, 152, 76);
+      ctx.strokeStyle = 'rgba(217, 107, 74, 0.45)';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(-70, -32, 140, 64);
+      ctx.fillStyle = '#D96B4A';
+      ctx.font = 'bold 24px "Noto Sans SC", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('今日动笔', 0, -4);
+      ctx.font = '18px "Noto Sans SC", sans-serif';
+      ctx.fillText('松鸦画坊留念', 0, 22);
+      ctx.restore();
+
+      const dataUrl = canvas.toDataURL('image/png');
+      previewImg.src = dataUrl;
+
+      const dlBtn = document.getElementById('btn-download-poster');
+      dlBtn.onclick = () => {
+        const a = document.createElement('a');
+        a.href = dataUrl;
+        a.download = `松鸦画坊作品卡_${record.dateKey || 'share'}.png`;
+        a.click();
+        showToast('大图海报已保存，快复制配文发小红书吧！', '📕');
+      };
+    }
+
+    function drawRoundedRect(ctx, x, y, w, h, r, fill, stroke, lineWidth = 2) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+      if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+      if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lineWidth; ctx.stroke(); }
+    }
+
+    function loadBlobToImage(blob) {
+      return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(blob);
+        const img = new Image();
+        img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+        img.onerror = (e) => { URL.revokeObjectURL(url); reject(e); };
+        img.src = url;
+      });
+    }
+
+    /*************************************************************************
+     * 八、模块 3：耐丑训练室（双模式 + 真实时间戳计时 + Screen Wake Lock + 无限营业肯定）
+     *************************************************************************/
+    function renderRefImageStage() {
+      const stage = document.getElementById('ref-image-stage');
+      const titleEl = document.getElementById('ref-image-title');
+      const tipEl = document.getElementById('ref-shape-tip');
+
+      if (state.customRefBlob) {
+        const url = createManagedBlobUrl(state.customRefBlob);
+        titleEl.textContent = '今日画题：我自选的参考图';
+        tipEl.textContent = '👀 观察提示：忽略繁琐细节，先抓最大的外轮廓形状下笔！';
+        stage.innerHTML = `<img src="${url}" class="w-full h-full max-h-60 object-contain rounded-lg" alt="自定义参考图" />`;
+      } else {
+        const item = BUILTIN_REF_IMAGES[state.currentRefIndex % BUILTIN_REF_IMAGES.length];
+        titleEl.textContent = `今日参考：${item.title}`;
+        tipEl.textContent = `👀 ${item.tip}`;
+        stage.innerHTML = `<div class="w-full h-full max-h-60 flex items-center justify-center">${item.svg}</div>`;
+      }
+    }
+
+    function renderSentencePrompt() {
+      document.getElementById('sentence-prompt-text').textContent = state.currentSentence.content;
+      document.getElementById('sentence-prompt-author').textContent = `— ${state.currentSentence.source || '松鸦画坊'}`;
+      document.getElementById('sentence-source-badge').textContent = state.currentSentence.isFromUser
+        ? '来自：我的文摘收藏 ⭐'
+        : '来自：画坊内置句库';
+    }
+
+    function pickRandomSentencePrompt() {
+      // 合并用户文摘与系统内置句库
+      const pool = [
+        ...BUILTIN_SENTENCES.map(s => ({ ...s, isFromUser: false })),
+        ...state.excerpts.map(e => ({ content: e.content, source: e.source || '我的摘抄本', isFromUser: true }))
+      ];
+      if (pool.length <= 1) return;
+      let next = pool[Math.floor(Math.random() * pool.length)];
+      if (next.content === state.currentSentence.content) {
+        next = pool[(pool.indexOf(next) + 1) % pool.length];
+      }
+      state.currentSentence = next;
+      renderSentencePrompt();
+    }
+
+    // 申请常亮锁 Screen Wake Lock API
+    async function requestWakeLock() {
+      if ('wakeLock' in navigator) {
+        try {
+          state.wakeLockSentinel = await navigator.wakeLock.request('screen');
+        } catch (_) {}
+      }
+    }
+
+    async function releaseWakeLock() {
+      if (state.wakeLockSentinel) {
+        try {
+          await state.wakeLockSentinel.release();
+        } catch (_) {}
+        state.wakeLockSentinel = null;
+      }
+    }
+
+    // 启动模式 A 10分钟倒计时（严格按 截止时间戳 - Date.now() 计算）
+    function startImageTrainingTimer() {
+      state.trainingRunning = true;
+      const DURATION_MS = 10 * 60 * 1000; // 10分钟
+      state.timerDeadline = Date.now() + DURATION_MS;
+
+      // 切换 UI 至计时态
+      document.getElementById('training-active-banner').classList.remove('hidden');
+      document.getElementById('timer-bar-box').classList.remove('hidden');
+      document.getElementById('sentence-encourage-box').classList.add('hidden');
+      document.getElementById('image-idle-controls').classList.add('hidden');
+      document.getElementById('image-running-controls').classList.remove('hidden');
+      document.getElementById('nav-training-running-dot').classList.remove('hidden');
+      document.getElementById('ref-image-hint').textContent = '专注速写中';
+      document.getElementById('ref-image-hint').className = 'text-[11px] px-2 py-0.5 rounded bg-warmOrange text-white';
+
+      requestWakeLock();
+
+      const tick = () => {
+        if (!state.trainingRunning || state.trainingMode !== 'image') return;
+        const remainMs = Math.max(0, state.timerDeadline - Date.now());
+        const totalSec = Math.ceil(remainMs / 1000);
+        const mins = String(Math.floor(totalSec / 60)).padStart(2, '0');
+        const secs = String(totalSec % 60).padStart(2, '0');
+
+        document.getElementById('timer-display').textContent = `${mins}:${secs}`;
+        const pct = (remainMs / DURATION_MS) * 100;
+        document.getElementById('timer-progress-bar').style.width = `${pct}%`;
+
+        if (remainMs <= 0) {
+          finishTrainingSession();
+        } else {
+          state.timerRAF = requestAnimationFrame(tick);
+        }
+      };
+      state.timerRAF = requestAnimationFrame(tick);
+    }
+
+    function stopTrainingSessionUI() {
+      state.trainingRunning = false;
+      if (state.timerRAF) cancelAnimationFrame(state.timerRAF);
+      releaseWakeLock();
+
+      document.getElementById('training-active-banner').classList.add('hidden');
+      document.getElementById('image-idle-controls').classList.remove('hidden');
+      document.getElementById('image-running-controls').classList.add('hidden');
+      document.getElementById('sentence-idle-controls').classList.remove('hidden');
+      document.getElementById('sentence-running-controls').classList.add('hidden');
+      document.getElementById('nav-training-running-dot').classList.add('hidden');
+      document.getElementById('ref-image-hint').textContent = '点击画题可放大';
+      document.getElementById('ref-image-hint').className = 'text-[11px] px-2 py-0.5 rounded bg-[#F2ECE1]';
+    }
+
+    // 更新顶部营业牌与递进夸奖文案（不设上限）
+    function getPraiseTier(count) {
+      if (count === 0) return { badge: '营业中 · 0 次', title: '今日刚开张，进来随便画两笔！', desc: '不求画得像，敢在白纸上留下痕迹就是胜利。' };
+      if (count < 3) return { badge: `营业中 · ${count} 次`, title: '手感热起来啦！画完就赢！', desc: '每一次下笔都在帮大脑卸下完美主义的包袱。' };
+      if (count < 5) return { badge: `火热营业 · ${count} 次`, title: '状态超稳！你已经找到松弛感了！', desc: '看看今天积累的速写，歪歪扭扭也超级可爱！' };
+      if (count === 5) return { badge: `🌟 超常营业 · ${count} 次`, title: '今日达成 5 连画！授予「画坊金章」！', desc: '超额完成今日营业！从现在起每一幅都是纯享创造时刻！' };
+      if (count < 8) return { badge: `🔥 超常营业 · ${count} 次`, title: `超常营业第 ${count} 幅！灵感停不下来！`, desc: '松鸦店长已经来不及给你递纸了，今天你是画坊最靓的崽！' };
+      return { badge: `👑 今日卷王 · ${count} 次`, title: `今日狂画 ${count} 次！松鸦画坊荣誉大坊主！`, desc: '不设上限的热爱！白纸看到你都已经毫无压力了！' };
+    }
+
+    function updateBusinessSignUI() {
+      const tier = getPraiseTier(state.todayCount);
+      document.getElementById('business-status-text').textContent = tier.badge;
+    }
+
+    // 完成训练：震动兜底 + 音效 + 盖章弹窗 + 满5次及以上每次撒花
+    async function finishTrainingSession() {
+      stopTrainingSessionUI();
+
+      state.todayCount += 1;
+      const todayKey = getTodayDateKey();
+      await dbPut('trainingProgress', { dateKey: todayKey, count: state.todayCount });
+      updateBusinessSignUI();
+
+      if (navigator.vibrate) {
+        try { navigator.vibrate([80, 40, 120]); } catch (_) {}
+      }
+      const isOvertime = state.todayCount >= 5;
+      playStampSound(isOvertime);
+
+      const tier = getPraiseTier(state.todayCount);
+      document.getElementById('done-stamp-title').textContent = isOvertime ? '超常金章' : '今日动笔';
+      document.getElementById('done-stamp-count').textContent = `今日第 ${state.todayCount} 章`;
+      document.getElementById('done-praise-title').textContent = tier.title;
+      document.getElementById('done-praise-desc').textContent = tier.desc;
+
+      const badgeEl = document.getElementById('done-overtime-badge');
+      if (isOvertime) {
+        badgeEl.classList.remove('hidden');
+        badgeEl.textContent = `🌟 超常营业 · 今日第 ${state.todayCount} 次达成！`;
+      } else {
+        badgeEl.classList.add('hidden');
+      }
+
+      state.doneCheckinBlob = null;
+      document.getElementById('done-photo-preview-box').classList.add('hidden');
+      document.getElementById('done-photo-btn-text').textContent = '立即拍照 / 选速写图打卡 (必传)';
+      document.getElementById('done-note-input').value = state.trainingMode === 'sentence'
+        ? `画题：「${state.currentSentence.content}」`
+        : '';
+
+      document.getElementById('modal-training-done').classList.remove('hidden');
+
+      if (isOvertime) {
+        launchConfetti();
+      }
+    }
+
+    // 撒花粒子动画 (Canvas)
+    function launchConfetti() {
+      const canvas = document.getElementById('confetti-canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = canvas.offsetWidth || 400;
+      canvas.height = canvas.offsetHeight || 700;
+
+      const colors = ['#E08A4B', '#D96B4A', '#8A9A7B', '#F2E2A8', '#E8C4C4', '#C9A87C'];
+      const pieces = Array.from({ length: 65 }, () => ({
+        x: Math.random() * canvas.width,
+        y: -20 - Math.random() * 180,
+        w: 7 + Math.random() * 6,
+        h: 10 + Math.random() * 8,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        vy: 2.2 + Math.random() * 3,
+        vx: -1.5 + Math.random() * 3,
+        rot: Math.random() * Math.PI * 2,
+        vrot: -0.1 + Math.random() * 0.2
+      }));
+
+      let frames = 0;
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach(p => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.rot += p.vrot;
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate(p.rot);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+          ctx.restore();
+        });
+        frames++;
+        if (frames < 150) requestAnimationFrame(draw);
+        else ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+      requestAnimationFrame(draw);
+    }
+
+    /*************************************************************************
+     * 九、模块 4：文摘 (ExcerptsView) 渲染与【画这句】联动
+     *************************************************************************/
+    function renderExcerptsFilterBar() {
+      const bar = document.getElementById('excerpt-filter-bar');
+      const filters = [
+        { key: 'ALL', label: '全部摘抄' },
+        { key: 'STARRED', label: '⭐ 收藏夹' },
+        { key: '#好词好句', label: '#好词好句' },
+        { key: '#放松', label: '#放松' },
+        { key: '#振奋', label: '#振奋' },
+        { key: '#画题', label: '#画题' }
+      ];
+      bar.innerHTML = filters.map(f => {
+        const active = state.excerptSelectedFilter === f.key;
+        return `<button data-efilter="${f.key}" class="excerpt-filter-btn shrink-0 text-[11px] px-2.5 py-1 rounded-full border transition ${
+          active
+            ? 'bg-sage text-white border-sage font-medium'
+            : 'bg-[#FFFDF9] text-inkLight border-[#D9C4A0]'
+        }">${f.label}</button>`;
+      }).join('');
+
+      bar.querySelectorAll('.excerpt-filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.excerptSelectedFilter = btn.dataset.efilter;
+          renderExcerptsFilterBar();
+          renderExcerptsList();
+        });
+      });
+    }
+
+    function renderExcerptsList() {
+      const container = document.getElementById('excerpt-list');
+      const q = state.excerptSearchQuery.trim().toLowerCase();
+      const f = state.excerptSelectedFilter;
+
+      const list = state.excerpts.filter(item => {
+        if (f === 'STARRED' && !item.starred) return false;
+        if (f !== 'ALL' && f !== 'STARRED' && !(item.tags || []).includes(f)) return false;
+        if (!q) return true;
+        const inContent = (item.content || '').toLowerCase().includes(q);
+        const inSource = (item.source || '').toLowerCase().includes(q);
+        const inTags = (item.tags || []).some(t => t.toLowerCase().includes(q));
+        return inContent || inSource || inTags;
+      });
+
+      if (list.length === 0) {
+        container.innerHTML = `
+          <div class="bg-[#FFFDF9] rounded-2xl p-8 border border-dashed border-[#C9A87C] text-center space-y-2">
+            <div class="text-3xl">🔖</div>
+            <p class="font-display text-sm text-ink">摘抄本里还没有匹配的句子</p>
+            <p class="text-xs text-inkLight">点击右上角「＋ 记一句」把喜欢的句子夹进来吧</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = list.map(item => `
+        <div class="relative bg-[#FFFDF9] rounded-2xl p-4 border border-[#D9C4A0] shadow-card lined-paper">
+          <!-- 左侧书签孔装饰 -->
+          <div class="flex items-start justify-between gap-2">
+            <p class="text-sm text-ink font-medium leading-relaxed flex-1">${escapeHtml(item.content)}</p>
+            <button data-star-id="${item.id}" class="btn-star-excerpt text-base shrink-0 active:scale-125 transition" title="收藏句子">
+              ${item.starred ? '⭐' : '☆'}
+            </button>
+          </div>
+
+          <div class="mt-2 flex items-center justify-between text-xs text-inkLight">
+            <span class="font-hand text-base text-inkLight">— ${escapeHtml(item.source || '随手摘抄')}</span>
+          </div>
+
+          <div class="mt-3 pt-2 border-t border-dashed border-[#D9C4A0] flex items-center justify-between gap-2 flex-wrap">
+            <div class="flex items-center gap-1 flex-wrap">
+              ${(item.tags || []).map(t => `
+                <span class="text-[10px] px-2 py-0.5 rounded-full bg-[#F2ECE1] text-sageDark">${escapeHtml(t)}</span>
+              `).join('')}
+            </div>
+
+            <div class="flex items-center gap-2 ml-auto">
+              <button data-edit-id="${item.id}" class="btn-edit-excerpt text-[11px] text-inkLight hover:text-ink px-1">编辑</button>
+              <button data-del-id="${item.id}" class="btn-del-excerpt text-[11px] text-inkLight hover:text-tomato px-1">删除</button>
+              <button data-draw-id="${item.id}" class="btn-draw-excerpt px-3 py-1 rounded-full bg-warmOrange text-white text-[11px] font-medium shadow-sm flex items-center gap-1 active:scale-95 transition">
+                <span>🎨 画这句</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+
+      // 收藏切换
+      container.querySelectorAll('.btn-star-excerpt').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const item = state.excerpts.find(e => e.id === btn.dataset.starId);
+          if (!item) return;
+          item.starred = !item.starred;
+          await dbPut('excerpts', item);
+          renderExcerptsList();
+        });
+      });
+
+      // 编辑句子
+      container.querySelectorAll('.btn-edit-excerpt').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const item = state.excerpts.find(e => e.id === btn.dataset.editId);
+          if (!item) return;
+          document.getElementById('excerpt-form-title').textContent = '✏️ 编辑摘抄句子';
+          document.getElementById('excerpt-edit-id').value = item.id;
+          document.getElementById('excerpt-input-content').value = item.content || '';
+          document.getElementById('excerpt-input-source').value = item.source || '';
+          state.excerptFormTags = new Set(item.tags && item.tags.length ? item.tags : ['#好词好句']);
+          syncExcerptFormTagButtons();
+          document.getElementById('excerpt-form-card').classList.remove('hidden');
+        });
+      });
+
+      // 删除句子（带防误删二次确认）
+      container.querySelectorAll('.btn-del-excerpt').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (btn.dataset.confirming !== 'true') {
+            btn.dataset.confirming = 'true';
+            btn.textContent = '确认删?';
+            btn.classList.add('text-tomato', 'font-bold');
+            setTimeout(() => {
+              if (btn.isConnected && btn.dataset.confirming === 'true') {
+                btn.dataset.confirming = 'false';
+                btn.textContent = '删除';
+                btn.classList.remove('text-tomato', 'font-bold');
+              }
+            }, 3000);
+            return;
+          }
+          const id = btn.dataset.delId;
+          await dbDelete('excerpts', id);
+          state.excerpts = state.excerpts.filter(e => e.id !== id);
+          renderExcerptsList();
+          showToast('已从摘抄本移除', '🗑️');
+        });
+      });
+
+      // 【画这句】一键跳转到耐丑训练“一句话画图”模式并设为画题
+      container.querySelectorAll('.btn-draw-excerpt').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const item = state.excerpts.find(e => e.id === btn.dataset.drawId);
+          if (!item) return;
+          state.currentSentence = {
+            content: item.content,
+            source: item.source || '我的摘抄本',
+            isFromUser: true
+          };
+          switchTab('training');
+          switchTrainingMode('sentence');
+          renderSentencePrompt();
+          showToast('已将句子设为画题，自由动笔吧！', '🎨');
+        });
+      });
+    }
+
+    function syncExcerptFormTagButtons() {
+      document.querySelectorAll('.excerpt-tag-btn').forEach(btn => {
+        const tag = btn.dataset.etag;
+        if (state.excerptFormTags.has(tag)) {
+          btn.className = 'excerpt-tag-btn active text-[11px] px-2.5 py-0.5 rounded-full border border-sage bg-sage text-white transition';
+        } else {
+          btn.className = 'excerpt-tag-btn text-[11px] px-2.5 py-0.5 rounded-full border border-[#D9C4A0] bg-[#FAF7F0] text-inkLight transition';
+        }
+      });
+    }
+
+    /*************************************************************************
+     * 十、导航路由与全局事件绑定
+     *************************************************************************/
+    function switchTab(tabName) {
+      state.activeTab = tabName;
+      const views = {
+        journal: document.getElementById('view-journal'),
+        guide: document.getElementById('view-guide'),
+        training: document.getElementById('view-training'),
+        excerpts: document.getElementById('view-excerpts'),
+      };
+      Object.entries(views).forEach(([k, el]) => {
+        if (k === tabName) el.classList.remove('hidden');
+        else el.classList.add('hidden');
+      });
+
+      // 指南作为作品墙的子页，底部导航依然高亮作品墙
+      const navTarget = tabName === 'guide' ? 'journal' : tabName;
+      document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+        const isCurrent = btn.dataset.nav === navTarget;
+        const iconWrap = btn.querySelector('.nav-icon-wrap');
+        if (isCurrent) {
+          btn.classList.add('text-sageDark', 'font-bold');
+          btn.classList.remove('text-inkLight');
+          iconWrap.classList.add('bg-sage/20');
+        } else {
+          btn.classList.remove('text-sageDark', 'font-bold');
+          btn.classList.add('text-inkLight');
+          iconWrap.classList.remove('bg-sage/20');
+        }
+      });
+    }
+
+    function switchTrainingMode(mode) {
+      if (state.trainingRunning) {
+        stopTrainingSessionUI();
+      }
+      state.trainingMode = mode;
+      const btnImg = document.getElementById('tab-mode-image');
+      const btnSen = document.getElementById('tab-mode-sentence');
+      const panelImg = document.getElementById('panel-mode-image');
+      const panelSen = document.getElementById('panel-mode-sentence');
+
+      if (mode === 'image') {
+        btnImg.className = 'px-3 py-1.5 rounded-lg text-xs font-medium transition bg-sage text-white shadow-sm';
+        btnSen.className = 'px-3 py-1.5 rounded-lg text-xs font-medium transition text-inkLight hover:text-ink';
+        panelImg.classList.remove('hidden');
+        panelSen.classList.add('hidden');
+      } else {
+        btnSen.className = 'px-3 py-1.5 rounded-lg text-xs font-medium transition bg-sage text-white shadow-sm';
+        btnImg.className = 'px-3 py-1.5 rounded-lg text-xs font-medium transition text-inkLight hover:text-ink';
+        panelSen.classList.remove('hidden');
+        panelImg.classList.add('hidden');
+      }
+    }
+
+    // 备份导入导出辅助：Blob <-> DataURL
+    function blobToDataURL(blob) {
+      return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    async function dataURLToBlob(dataUrl) {
+      const res = await fetch(dataUrl);
+      return await res.blob();
+    }
+
+    // 初始化所有 DOM 事件监听
+    window.addEventListener('DOMContentLoaded', async () => {
+      await loadAllDataFromDB();
+      renderRefImageStage();
+      renderSentencePrompt();
+
+      // 底部 Tab 切换
+      document.querySelectorAll('.nav-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.nav));
+      });
+
+      // 打开/关闭新手反焦虑绘画指南子页
+      document.getElementById('btn-open-guide').addEventListener('click', () => switchTab('guide'));
+      document.getElementById('btn-close-guide').addEventListener('click', () => switchTab('journal'));
+      document.getElementById('btn-guide-to-training').addEventListener('click', () => switchTab('training'));
+
+      // 作品墙顶部搜索
+      const searchInput = document.getElementById('journal-search');
+      const searchClear = document.getElementById('journal-search-clear');
+      searchInput.addEventListener('input', (e) => {
+        state.journalSearchQuery = e.target.value;
+        searchClear.classList.toggle('hidden', !state.journalSearchQuery);
+        renderJournalTimeline();
+      });
+      searchClear.addEventListener('click', () => {
+        searchInput.value = '';
+        state.journalSearchQuery = '';
+        searchClear.classList.add('hidden');
+        renderJournalTimeline();
+      });
+
+      // 作品墙发布器标签多选
+      document.querySelectorAll('.composer-tag-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const tag = btn.dataset.tag;
+          if (state.composerSelectedTags.has(tag)) {
+            if (state.composerSelectedTags.size > 1) state.composerSelectedTags.delete(tag);
+          } else {
+            state.composerSelectedTags.add(tag);
+          }
+          document.querySelectorAll('.composer-tag-btn').forEach(b => {
+            const active = state.composerSelectedTags.has(b.dataset.tag);
+            b.className = active
+              ? 'composer-tag-btn active text-[11px] px-2.5 py-0.5 rounded-full border border-sage bg-sage text-white transition'
+              : 'composer-tag-btn text-[11px] px-2.5 py-0.5 rounded-full border border-[#D9C4A0] bg-[#FAF7F0] text-inkLight transition';
+          });
+        });
+      });
+
+      // 作品墙图片上传（前端 Worker 压缩成 Blob + 纸面提亮支持）
+      const fileInput = document.getElementById('journal-file-input');
+      fileInput.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        document.getElementById('upload-btn-label').textContent = '压缩处理中...';
+        const compressedBlob = await compressImageToBlob(file);
+        state.composerRawBlob = compressedBlob;
+        state.composerImageBlob = compressedBlob;
+        state.composerBrightened = false;
+        const brightenBtn = document.getElementById('btn-brighten-composer');
+        brightenBtn.textContent = '✨ 提亮纸面 (去阴影)';
+        brightenBtn.className = 'text-[11px] px-2.5 py-0.5 rounded-full border border-[#C9A87C] bg-[#FAF7F0] text-ink hover:bg-[#F2E2A8]/60 transition flex items-center gap-1';
+
+        const previewUrl = createManagedBlobUrl(compressedBlob);
+        document.getElementById('journal-upload-preview').src = previewUrl;
+        const kb = Math.max(1, Math.round(compressedBlob.size / 1024));
+        document.getElementById('journal-upload-meta').textContent = `Blob ${kb}KB`;
+        document.getElementById('journal-upload-preview-wrap').classList.remove('hidden');
+        document.getElementById('upload-btn-label').textContent = '更换画作图片';
+        fileInput.value = '';
+      });
+
+      // 待上传预览图点击全屏放大 & 切换纸面提亮滤镜
+      document.getElementById('journal-upload-preview').addEventListener('click', (e) => {
+        openLightboxImage(e.target.src, '待上墙画作预览');
+      });
+
+      document.getElementById('btn-brighten-composer').addEventListener('click', async () => {
+        if (!state.composerRawBlob) return;
+        const btn = document.getElementById('btn-brighten-composer');
+        state.composerBrightened = !state.composerBrightened;
+        if (state.composerBrightened) {
+          btn.textContent = '⏳ 正在提亮纸面...';
+          const brightened = await applyBrightenFilterToBlob(state.composerRawBlob);
+          state.composerImageBlob = brightened;
+          document.getElementById('journal-upload-preview').src = createManagedBlobUrl(brightened);
+          btn.textContent = '✨ 已提亮纸面 (点击还原)';
+          btn.className = 'text-[11px] px-2.5 py-0.5 rounded-full border border-warmOrange bg-[#F2E2A8] text-ink font-medium transition flex items-center gap-1';
+          showToast('已提亮画纸背景，线条更清晰啦！', '✨');
+        } else {
+          state.composerImageBlob = state.composerRawBlob;
+          document.getElementById('journal-upload-preview').src = createManagedBlobUrl(state.composerRawBlob);
+          btn.textContent = '✨ 提亮纸面 (去阴影)';
+          btn.className = 'text-[11px] px-2.5 py-0.5 rounded-full border border-[#C9A87C] bg-[#FAF7F0] text-ink hover:bg-[#F2E2A8]/60 transition flex items-center gap-1';
+          showToast('已还原原图色调', '↩️');
+        }
+      });
+
+      document.getElementById('journal-upload-remove').addEventListener('click', () => {
+        state.composerRawBlob = null;
+        state.composerImageBlob = null;
+        state.composerBrightened = false;
+        document.getElementById('journal-upload-preview-wrap').classList.add('hidden');
+        document.getElementById('upload-btn-label').textContent = '拍画作 / 选相册 (必选)';
+      });
+
+      // 发布作品墙记录（盖章上墙必须有画作图片）
+      document.getElementById('btn-publish-journal').addEventListener('click', async () => {
+        const textEl = document.getElementById('journal-input-text');
+        const content = textEl.value.trim();
+        if (!state.composerImageBlob) {
+          showToast('盖章上墙必须先拍一张或选一张画作图片哦~', '📸');
+          const uploadLabel = document.getElementById('journal-upload-label');
+          uploadLabel.classList.add('ring-2', 'ring-tomato', 'bg-[#F2E2A8]', 'animate-require');
+          setTimeout(() => {
+            uploadLabel.classList.remove('ring-2', 'ring-tomato', 'bg-[#F2E2A8]', 'animate-require');
+          }, 1600);
+          return;
+        }
+        const now = Date.now();
+        const newRec = {
+          id: 'rec-' + now,
+          type: 'journal',
+          mode: null,
+          content: content || '今日随手涂鸦打卡，随便画两笔真开心！',
+          imageBlob: state.composerImageBlob,
+          tags: Array.from(state.composerSelectedTags),
+          createdAt: now,
+          dateKey: getTodayDateKey(now)
+        };
+        await dbPut('records', newRec);
+        state.records.unshift(newRec);
+
+        textEl.value = '';
+        state.composerRawBlob = null;
+        state.composerImageBlob = null;
+        state.composerBrightened = false;
+        document.getElementById('journal-upload-preview-wrap').classList.add('hidden');
+        document.getElementById('upload-btn-label').textContent = '拍画作 / 选相册 (必选)';
+
+        playStampSound(false);
+        renderJournalFilterTags();
+        renderJournalTimeline();
+        showToast('已盖章贴上作品墙！', '💮');
+      });
+
+      // 作品墙卡片二次编辑弹窗事件
+      document.getElementById('btn-close-edit-record').addEventListener('click', () => {
+        document.getElementById('modal-edit-record').classList.add('hidden');
+      });
+
+      document.getElementById('btn-add-custom-tag').addEventListener('click', () => {
+        const input = document.getElementById('edit-custom-tag-input');
+        let val = input.value.trim();
+        if (!val) return;
+        if (!val.startsWith('#')) val = '#' + val;
+        state.editingRecordTags.add(val);
+        input.value = '';
+        renderEditRecordTags();
+      });
+
+      document.getElementById('btn-save-edit-record').addEventListener('click', async () => {
+        const target = state.records.find(r => r.id === state.editingRecordId);
+        if (!target) return;
+        target.content = document.getElementById('edit-record-content').value.trim();
+        target.tags = Array.from(state.editingRecordTags);
+        await dbPut('records', target);
+        document.getElementById('modal-edit-record').classList.add('hidden');
+        renderJournalFilterTags();
+        renderJournalTimeline();
+        showToast('画作碎碎念与标签已更新！', '✏️');
+      });
+
+      // 全屏灯箱关闭事件
+      document.getElementById('modal-lightbox').addEventListener('click', () => {
+        document.getElementById('modal-lightbox').classList.add('hidden');
+      });
+
+      // 训练室参考图点击全屏放大
+      document.getElementById('ref-image-stage').addEventListener('click', () => {
+        if (state.customRefBlob) {
+          openLightboxImage(createManagedBlobUrl(state.customRefBlob), '我自选的参考画题');
+        } else {
+          const item = BUILTIN_REF_IMAGES[state.currentRefIndex % BUILTIN_REF_IMAGES.length];
+          openLightboxSvg(item.svg, `参考画题：${item.title}`);
+        }
+      });
+
+      // 松鸦打气站（画坊话签罐）
+      const modalCheer = document.getElementById('modal-cheer');
+      const pickCheer = () => {
+        const q = CHEER_QUOTES[Math.floor(Math.random() * CHEER_QUOTES.length)];
+        document.getElementById('cheer-quote-text').textContent = `“${q}”`;
+      };
+      document.getElementById('btn-cheer-up').addEventListener('click', () => {
+        pickCheer();
+        modalCheer.classList.remove('hidden');
+      });
+      document.getElementById('btn-another-cheer').addEventListener('click', pickCheer);
+      document.getElementById('btn-close-cheer').addEventListener('click', () => modalCheer.classList.add('hidden'));
+
+      // 海报弹窗关闭与样式切换事件
+      document.getElementById('btn-close-poster').addEventListener('click', () => {
+        document.getElementById('modal-poster').classList.add('hidden');
+      });
+
+      document.getElementById('btn-poster-contain').addEventListener('click', () => {
+        state.posterFitMode = 'contain';
+        document.getElementById('btn-poster-contain').className = 'px-2 py-0.5 rounded-md bg-sage text-white font-medium transition';
+        document.getElementById('btn-poster-cover').className = 'px-2 py-0.5 rounded-md text-inkLight transition';
+        renderPosterCanvas();
+      });
+
+      document.getElementById('btn-poster-cover').addEventListener('click', () => {
+        state.posterFitMode = 'cover';
+        document.getElementById('btn-poster-cover').className = 'px-2 py-0.5 rounded-md bg-sage text-white font-medium transition';
+        document.getElementById('btn-poster-contain').className = 'px-2 py-0.5 rounded-md text-inkLight transition';
+        renderPosterCanvas();
+      });
+
+      document.querySelectorAll('.poster-theme-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.posterTheme = btn.dataset.ptheme;
+          document.querySelectorAll('.poster-theme-btn').forEach(b => {
+            b.classList.toggle('ring-2', b.dataset.ptheme === state.posterTheme);
+            b.classList.toggle('ring-sage', b.dataset.ptheme === state.posterTheme);
+          });
+          renderPosterCanvas();
+        });
+      });
+
+      // 耐丑训练室交互
+      document.getElementById('tab-mode-image').addEventListener('click', () => switchTrainingMode('image'));
+      document.getElementById('tab-mode-sentence').addEventListener('click', () => switchTrainingMode('sentence'));
+
+      document.getElementById('btn-change-ref-img').addEventListener('click', () => {
+        state.customRefBlob = null;
+        state.currentRefIndex = (state.currentRefIndex + 1) % BUILTIN_REF_IMAGES.length;
+        renderRefImageStage();
+      });
+
+      document.getElementById('input-custom-ref-img').addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const blob = await compressImageToBlob(file);
+        state.customRefBlob = blob;
+        renderRefImageStage();
+        showToast('已换上你自选的参考画题！', '🖼️');
+        e.target.value = '';
+      });
+
+      document.getElementById('btn-start-image-timer').addEventListener('click', startImageTrainingTimer);
+      document.getElementById('btn-cancel-image-timer').addEventListener('click', () => {
+        stopTrainingSessionUI();
+        showToast('已回到待命挑图状态', '🍃');
+      });
+      document.getElementById('btn-finish-image-early').addEventListener('click', finishTrainingSession);
+
+      // 模式 B：一句话画图
+      document.getElementById('btn-change-sentence').addEventListener('click', pickRandomSentencePrompt);
+      document.getElementById('btn-start-sentence-draw').addEventListener('click', () => {
+        state.trainingRunning = true;
+        document.getElementById('training-active-banner').classList.remove('hidden');
+        document.getElementById('timer-bar-box').classList.add('hidden');
+        document.getElementById('sentence-encourage-box').classList.remove('hidden');
+        document.getElementById('sentence-idle-controls').classList.add('hidden');
+        document.getElementById('sentence-running-controls').classList.remove('hidden');
+        document.getElementById('nav-training-running-dot').classList.remove('hidden');
+        requestWakeLock();
+      });
+      document.getElementById('btn-cancel-sentence-draw').addEventListener('click', stopTrainingSessionUI);
+      document.getElementById('btn-finish-sentence-draw').addEventListener('click', finishTrainingSession);
+
+      // 营业牌点击提示
+      document.getElementById('btn-business-sign').addEventListener('click', () => {
+        const tier = getPraiseTier(state.todayCount);
+        showToast(`${tier.badge} · ${tier.title}`, '🏮');
+      });
+
+      // 训练完成打卡弹窗交互
+      document.getElementById('input-done-photo').addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        document.getElementById('done-photo-btn-text').textContent = '正在压缩速写照片...';
+        const blob = await compressImageToBlob(file);
+        state.doneCheckinBlob = blob;
+        document.getElementById('done-photo-preview').src = createManagedBlobUrl(blob);
+        document.getElementById('done-photo-preview-box').classList.remove('hidden');
+        document.getElementById('done-photo-btn-text').textContent = '重拍 / 更换速写图';
+        e.target.value = '';
+      });
+
+      document.getElementById('btn-remove-done-photo').addEventListener('click', () => {
+        state.doneCheckinBlob = null;
+        document.getElementById('done-photo-preview-box').classList.add('hidden');
+        document.getElementById('done-photo-btn-text').textContent = '立即拍照 / 选速写图打卡 (必传)';
+      });
+
+      document.getElementById('btn-skip-checkin').addEventListener('click', () => {
+        document.getElementById('modal-training-done').classList.add('hidden');
+        showToast(`今日已累计营业 ${state.todayCount} 次！`, '💮');
+      });
+
+      document.getElementById('btn-confirm-checkin').addEventListener('click', async () => {
+        if (!state.doneCheckinBlob) {
+          showToast('贴上作品墙需要先拍/选一张刚才的速写图哦~', '📸');
+          const lbl = document.getElementById('done-upload-label');
+          lbl.classList.add('ring-2', 'ring-tomato', 'bg-[#F2E2A8]', 'animate-require');
+          setTimeout(() => lbl.classList.remove('ring-2', 'ring-tomato', 'bg-[#F2E2A8]', 'animate-require'), 1500);
+          return;
+        }
+        const note = document.getElementById('done-note-input').value.trim();
+        const autoTag = state.trainingMode === 'sentence' ? '#一句话画图' : '#耐丑打卡';
+        const fallbackContent = state.trainingMode === 'sentence'
+          ? `完成「一句话画图」挑战：${state.currentSentence.content}`
+          : `完成 10 分钟「看图速写」耐丑训练（今日第 ${state.todayCount} 次营业）！`;
+
+        const now = Date.now();
+        const rec = {
+          id: 'rec-' + now,
+          type: 'training',
+          mode: state.trainingMode,
+          content: note || fallbackContent,
+          imageBlob: state.doneCheckinBlob,
+          tags: [autoTag, '#日常涂鸦'],
+          createdAt: now,
+          dateKey: getTodayDateKey(now)
+        };
+        await dbPut('records', rec);
+        state.records.unshift(rec);
+
+        document.getElementById('modal-training-done').classList.add('hidden');
+        renderJournalFilterTags();
+        renderJournalTimeline();
+        switchTab('journal');
+        showToast('速写已贴上【作品墙】！', '💮');
+      });
+
+      // 文摘模块交互
+      document.getElementById('excerpt-search').addEventListener('input', (e) => {
+        state.excerptSearchQuery = e.target.value;
+        renderExcerptsList();
+      });
+
+      document.getElementById('btn-toggle-excerpt-form').addEventListener('click', () => {
+        const card = document.getElementById('excerpt-form-card');
+        document.getElementById('excerpt-form-title').textContent = '✒️ 往摘抄本里添一句';
+        document.getElementById('excerpt-edit-id').value = '';
+        document.getElementById('excerpt-input-content').value = '';
+        document.getElementById('excerpt-input-source').value = '';
+        state.excerptFormTags = new Set(['#好词好句']);
+        syncExcerptFormTagButtons();
+        card.classList.toggle('hidden');
+      });
+
+      document.getElementById('btn-close-excerpt-form').addEventListener('click', () => {
+        document.getElementById('excerpt-form-card').classList.add('hidden');
+      });
+
+      document.querySelectorAll('.excerpt-tag-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const t = btn.dataset.etag;
+          if (state.excerptFormTags.has(t)) {
+            if (state.excerptFormTags.size > 1) state.excerptFormTags.delete(t);
+          } else {
+            state.excerptFormTags.add(t);
+          }
+          syncExcerptFormTagButtons();
+        });
+      });
+
+      document.getElementById('btn-save-excerpt').addEventListener('click', async () => {
+        const content = document.getElementById('excerpt-input-content').value.trim();
+        const source = document.getElementById('excerpt-input-source').value.trim();
+        const editId = document.getElementById('excerpt-edit-id').value;
+        if (!content) {
+          showToast('请先写下句子内容哦~', '✒️');
+          return;
+        }
+        if (editId) {
+          const target = state.excerpts.find(e => e.id === editId);
+          if (target) {
+            target.content = content;
+            target.source = source;
+            target.tags = Array.from(state.excerptFormTags);
+            await dbPut('excerpts', target);
+          }
+        } else {
+          const newEx = {
+            id: 'ex-' + Date.now(),
+            content,
+            source,
+            tags: Array.from(state.excerptFormTags),
+            starred: false,
+            createdAt: Date.now()
+          };
+          await dbPut('excerpts', newEx);
+          state.excerpts.unshift(newEx);
+        }
+        document.getElementById('excerpt-form-card').classList.add('hidden');
+        renderExcerptsList();
+        showToast('已夹进柜台摘抄本！', '🔖');
+      });
+
+      // 备份与恢复弹窗交互
+      const modalBackup = document.getElementById('modal-backup');
+      document.getElementById('btn-open-backup').addEventListener('click', () => {
+        document.getElementById('stat-journal-count').textContent = state.records.length;
+        document.getElementById('stat-excerpt-count').textContent = state.excerpts.length;
+        document.getElementById('stat-training-count').textContent = state.todayCount;
+        modalBackup.classList.remove('hidden');
+      });
+      document.getElementById('btn-close-backup').addEventListener('click', () => modalBackup.classList.add('hidden'));
+
+      document.getElementById('btn-export-json').addEventListener('click', async () => {
+        showToast('正在打包画坊作品与文摘...', '📦');
+        const serializedRecords = [];
+        for (const r of state.records) {
+          serializedRecords.push({
+            ...r,
+            imageBlob: undefined,
+            imageDataUrl: r.imageBlob ? await blobToDataURL(r.imageBlob) : null
+          });
+        }
+        const progressList = await dbGetAll('trainingProgress');
+        const payload = {
+          app: 'ChillSketchHut',
+          version: '1.4',
+          exportedAt: new Date().toISOString(),
+          records: serializedRecords,
+          excerpts: state.excerpts,
+          trainingProgress: progressList
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `松鸦画坊备份_${getTodayDateKey()}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showToast('备份已导出下载！', '✅');
+      });
+
+      document.getElementById('input-import-json').addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        try {
+          const text = await file.text();
+          const data = JSON.parse(text);
+          if (Array.isArray(data.records)) {
+            for (const r of data.records) {
+              const imageBlob = r.imageDataUrl ? await dataURLToBlob(r.imageDataUrl) : null;
+              const clean = { ...r, imageBlob };
+              delete clean.imageDataUrl;
+              await dbPut('records', clean);
+            }
+          }
+          if (Array.isArray(data.excerpts)) {
+            for (const ex of data.excerpts) {
+              await dbPut('excerpts', ex);
+            }
+          }
+          if (Array.isArray(data.trainingProgress)) {
+            for (const p of data.trainingProgress) {
+              await dbPut('trainingProgress', p);
+            }
+          }
+          await loadAllDataFromDB();
+          modalBackup.classList.add('hidden');
+          showToast('作品墙备份已完整恢复！', '🎉');
+        } catch (err) {
+          showToast('备份文件格式有误，请检查', '⚠️');
+        }
+        e.target.value = '';
+      });
+    });
+  </script>
+</body>
+</html>
