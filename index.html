@@ -488,12 +488,9 @@
           </div>
 
           <div>
-            <label class="text-xs font-semibold text-ink block mb-1">标签</label>
-            <div class="flex flex-wrap gap-1.5 mb-2" id="composer-tag-selector">
-              <button type="button" onclick="toggleComposerTag('#日常涂鸦')" data-tag="#日常涂鸦" class="composer-tag-btn px-2.5 py-1 rounded-lg text-xs border border-sage bg-sageLight text-sageDark font-medium">#日常涂鸦</button>
-              <button type="button" onclick="toggleComposerTag('#耐丑打卡')" data-tag="#耐丑打卡" class="composer-tag-btn px-2.5 py-1 rounded-lg text-xs border border-[#D9C4A0] bg-[#FFFEFA] text-inkLight">#耐丑打卡</button>
-              <button type="button" onclick="toggleComposerTag('#一句话画图')" data-tag="#一句话画图" class="composer-tag-btn px-2.5 py-1 rounded-lg text-xs border border-[#D9C4A0] bg-[#FFFEFA] text-inkLight">#一句话画图</button>
-            </div>
+            <label class="text-xs font-semibold text-ink block mb-1">标签 <span class="text-inkLight font-normal">（选填 · 最近常用）</span></label>
+            <!-- 标签选择区：由 renderComposerTags() 依据最近常用的标签动态生成 -->
+            <div class="flex flex-wrap gap-1.5 mb-2" id="composer-tag-selector"></div>
             <div class="flex items-center gap-1.5">
               <input id="composer-custom-tag-input" type="text" placeholder="自定义标签（如 10分钟速写）" class="flex-1 rounded-xl px-2.5 py-1.5 text-xs bg-[#FFFEFA] border border-[#D9C4A0] text-ink focus:outline-none focus:border-sage" />
               <button type="button" onclick="addCustomTagToComposer()" class="px-3 py-1.5 rounded-xl bg-[#EFE5D4] text-xs font-semibold text-ink">＋添加</button>
@@ -522,7 +519,7 @@
             <textarea id="edit-record-content" rows="3" placeholder="补两句当时的心情..." class="w-full rounded-xl p-2.5 text-xs bg-[#FFFEFA] border border-[#D9C4A0] text-ink focus:outline-none focus:border-sage resize-none"></textarea>
           </div>
           <div>
-            <label class="text-xs font-semibold text-ink block mb-1">标签</label>
+            <label class="text-xs font-semibold text-ink block mb-1">标签 <span class="text-inkLight font-normal">（选填 · 最近常用）</span></label>
             <div class="flex flex-wrap gap-1.5 mb-2" id="edit-record-tag-list"></div>
             <div class="flex items-center gap-1.5">
               <input id="edit-custom-tag-input" type="text" placeholder="自定义标签" class="flex-1 rounded-xl px-2.5 py-1.5 text-xs bg-[#FFFEFA] border border-[#D9C4A0] text-ink focus:outline-none focus:border-sage" />
@@ -629,14 +626,14 @@
             <input id="excerpt-input-source" type="text" placeholder="如：小王子" class="w-full rounded-xl p-2 text-xs bg-[#FFFEFA] border border-[#D9C4A0] text-ink" />
           </div>
           <div>
-            <label class="text-xs font-semibold text-ink block mb-1">标签</label>
+            <label class="text-xs font-semibold text-ink block mb-1">标签 <span class="text-inkLight font-normal">（选填 · 最近常用）</span></label>
             <div class="flex flex-wrap gap-1.5 mb-2" id="excerpt-modal-tags"></div>
             <div class="flex items-center gap-1.5">
               <input id="excerpt-custom-tag-input" type="text" placeholder="自定义标签（如 治愈）" class="flex-1 rounded-xl px-2.5 py-1.5 text-xs bg-[#FFFEFA] border border-[#D9C4A0] text-ink focus:outline-none focus:border-sage" />
               <button type="button" onclick="addCustomTagToExcerptModal()" class="px-3 py-1.5 rounded-xl bg-[#EFE5D4] text-xs font-semibold text-ink">＋添加</button>
             </div>
           </div>
-          <button onclick="saveExcerptItem()" class="w-full py-2.5 rounded-xl bg-sage text-white text-xs font-bold shadow-md mt-2">收入话签罐</button>
+          <button id="excerpt-submit-btn" onclick="saveExcerptItem()" class="w-full py-2.5 rounded-xl bg-sage text-white text-xs font-bold shadow-md mt-2">收入话签罐</button>
         </div>
       </div>
     </div>
@@ -859,7 +856,7 @@
       todayCount: 0,
       journalSearchQuery: '',
       journalTagFilter: '',
-      composerTags: new Set(['#日常涂鸦']),
+      composerTags: new Set(),
       composerRawBlob: null,
       composerImageBlob: null,
       composerBrightened: false,
@@ -867,7 +864,8 @@
       editRecordTags: new Set(),
       excerptSearchQuery: '',
       excerptFilter: 'all',
-      excerptModalTags: new Set(['#画题']),
+      excerptModalTags: new Set(),
+      excerptEditId: null,
       posterRecord: null,
       posterFitMode: 'cover',
       posterTheme: 'oat',
@@ -1025,24 +1023,27 @@
     }
 
     function openComposerModal() {
+      state.composerTags.clear();
       document.getElementById('composer-modal').classList.remove('hidden');
       document.getElementById('composer-input-text').value = '';
+      document.getElementById('composer-custom-tag-input').value = '';
+      renderComposerTags();
       clearComposerImage();
     }
     function closeComposerModal() {
       document.getElementById('composer-modal').classList.add('hidden');
     }
 
+    // 作品墙标签选填：默认不选中任何标签，仅展示最近常用的 10 个
+    function renderComposerTags() {
+      renderTagChips('composer-tag-selector', state.composerTags, collectFrequentTags(state.records, 10), 'toggleComposerTag', 'border-sage bg-sageLight text-sageDark font-medium');
+    }
+
     function toggleComposerTag(tag) {
-      if (state.composerTags.has(tag)) {
-        if (state.composerTags.size > 1) state.composerTags.delete(tag);
-      } else {
-        state.composerTags.add(tag);
-      }
-      document.querySelectorAll('#composer-tag-selector .composer-tag-btn').forEach(b => {
-        const active = state.composerTags.has(b.dataset.tag);
-        b.className = active ? 'composer-tag-btn px-2.5 py-1 rounded-lg text-xs border border-sage bg-sageLight text-sageDark font-medium' : 'composer-tag-btn px-2.5 py-1 rounded-lg text-xs border border-[#D9C4A0] bg-[#FFFEFA] text-inkLight';
-      });
+      if (!tag) return;
+      if (state.composerTags.has(tag)) state.composerTags.delete(tag);
+      else state.composerTags.add(tag);
+      renderComposerTags();
     }
 
     function addCustomTagToComposer() {
@@ -1052,6 +1053,7 @@
       if (!val.startsWith('#')) val = '#' + val;
       state.composerTags.add(val);
       input.value = '';
+      renderComposerTags();
       showToast(`已添加标签：${val}`, '🏷️');
     }
 
@@ -1165,6 +1167,27 @@
                       </div>
                     ` : ''}
 
+                    ${(item.refSvg || item.refUrl) ? `
+                      <div class="mb-2.5 flex items-center gap-2 rounded-xl bg-[#FAF7F0] border border-[#E5DAC8] p-1.5">
+                        <div onclick="openRecordRefLightbox('${item.id}')" class="shrink-0 w-12 h-12 rounded-lg overflow-hidden bg-white border border-[#E5DAC8] flex items-center justify-center cursor-zoom-in">
+                          ${item.refSvg
+                            ? item.refSvg
+                            : `<img src="${item.refUrl}" loading="lazy" class="w-full h-full object-contain" />`}
+                        </div>
+                        <div class="min-w-0 flex-1">
+                          <p class="text-[10px] text-inkLight leading-none mb-1">🎯 参考画题</p>
+                          <p class="text-xs text-ink font-semibold truncate leading-none">${escapeHtml(item.refTitle || '参考图')}</p>
+                        </div>
+                      </div>
+                    ` : ''}
+
+                    ${(item.refType === 'sentence' && item.refTitle && !item.refSvg && !item.refUrl) ? `
+                      <div class="mb-2.5 flex items-start gap-2 rounded-xl bg-[#FAF7F0] border border-[#E5DAC8] p-2">
+                        <span class="shrink-0 text-[10px] px-1.5 py-0.5 rounded bg-sageLight text-sageDark font-semibold leading-none">💬 画题</span>
+                        <p class="text-xs text-ink leading-snug">${escapeHtml(item.refTitle)}</p>
+                      </div>
+                    ` : ''}
+
                     ${item.content ? `<p class="text-xs text-ink leading-relaxed mb-2.5 whitespace-pre-wrap">${escapeHtml(item.content)}</p>` : ''}
 
                     <div class="flex items-center justify-between gap-2 pt-2 border-t border-dashed border-[#E5D7C1]">
@@ -1227,7 +1250,7 @@
       const rec = state.records.find(r => r.id === id);
       if (!rec) return;
       state.editRecordId = id;
-      state.editRecordTags = new Set(rec.tags || ['#日常涂鸦']);
+      state.editRecordTags = new Set(rec.tags || []);
       document.getElementById('edit-record-id').value = id;
       document.getElementById('edit-record-content').value = rec.content || '';
       renderEditRecordTagList();
@@ -1236,17 +1259,11 @@
     function closeEditRecordModal() { document.getElementById('edit-record-modal').classList.add('hidden'); }
 
     function renderEditRecordTagList() {
-      const wrap = document.getElementById('edit-record-tag-list');
-      const base = ['#日常涂鸦', '#耐丑打卡', '#一句话画图', '#情绪宣泄', '#随手速写'];
-      state.editRecordTags.forEach(t => { if (!base.includes(t)) base.push(t); });
-      wrap.innerHTML = base.map(t => {
-        const active = state.editRecordTags.has(t);
-        return `<button type="button" onclick="toggleEditRecordTag(this.dataset.tag)" data-tag="${escapeAttr(t)}" class="px-2.5 py-1 rounded-lg text-xs border ${active ? 'border-sage bg-sageLight text-sageDark font-semibold' : 'border-[#D9C4A0] bg-[#FFFEFA] text-inkLight'}">${escapeHtml(t)}</button>`;
-      }).join('');
+      renderTagChips('edit-record-tag-list', state.editRecordTags, collectFrequentTags(state.records, 10), 'toggleEditRecordTag', 'border-sage bg-sageLight text-sageDark font-semibold');
     }
     function toggleEditRecordTag(t) {
       if (!t) return;
-      if (state.editRecordTags.has(t)) { if (state.editRecordTags.size > 1) state.editRecordTags.delete(t); }
+      if (state.editRecordTags.has(t)) state.editRecordTags.delete(t);
       else state.editRecordTags.add(t);
       renderEditRecordTagList();
     }
@@ -1347,18 +1364,28 @@
       }
     }
 
-    function openCurrentRefInLightbox() {
-      const item = state.currentPromptItem || BUILTIN_REF_IMAGES[0];
-      if (item.url) {
-        openLightbox(item.url, item.title || '参考画题');
-      } else if (item.svg) {
+    function openRefLightbox({ svg, url, title }) {
+      if (url) {
+        openLightbox(url, title || '参考画题');
+      } else if (svg) {
         document.getElementById('lightbox-img').classList.add('hidden');
         const holder = document.getElementById('lightbox-svg-holder');
         holder.classList.remove('hidden');
-        holder.innerHTML = item.svg;
-        document.getElementById('lightbox-caption').textContent = item.title || '参考画题';
+        holder.innerHTML = svg;
+        document.getElementById('lightbox-caption').textContent = title || '参考画题';
         document.getElementById('lightbox-modal').classList.remove('hidden');
       }
+    }
+
+    function openCurrentRefInLightbox() {
+      const item = state.currentPromptItem || BUILTIN_REF_IMAGES[0];
+      openRefLightbox({ svg: item.svg, url: item.url, title: item.title });
+    }
+
+    function openRecordRefLightbox(id) {
+      const rec = state.records.find(r => r.id === id);
+      if (!rec) return;
+      openRefLightbox({ svg: rec.refSvg, url: rec.refUrl, title: rec.refTitle });
     }
 
     /********************************************************************
@@ -1508,6 +1535,23 @@
       document.getElementById('complete-upload-label').classList.remove('hidden');
     }
 
+    // 打卡入墙时，把本次画题（参考图 / 一句话）一并快照进记录，便于作品墙上回看参考
+    function buildTrainingRefSnapshot() {
+      if (state.trainingMode === 'sentence') {
+        const s = state.currentSentence;
+        if (!s || !s.content) return {};
+        return { refType: 'sentence', refTitle: s.content };
+      }
+      const item = state.currentPromptItem;
+      if (!item) return {};
+      return {
+        refType: 'image',
+        refTitle: item.title || '参考画题',
+        refSvg: item.svg || '',
+        refUrl: item.url || ''
+      };
+    }
+
     async function saveTrainingCheckinToJournal() {
       if (!state.completeCheckinBlob) {
         showToast('📸 贴上作品墙需要先拍下速写照片哦~', '⚠️');
@@ -1517,7 +1561,8 @@
       const now = Date.now();
       const rec = {
         id: 'rec-' + now, type: 'training', content: note || `完成了耐丑训练（今日第 ${state.todayCount} 次动笔）`,
-        imageBlob: state.completeCheckinBlob, tags: ['#耐丑打卡'], createdAt: now, dateKey: getTodayDateKey(now)
+        imageBlob: state.completeCheckinBlob, tags: ['#耐丑打卡'], createdAt: now, dateKey: getTodayDateKey(now),
+        ...buildTrainingRefSnapshot()
       };
       await dbPut('records', rec);
       state.records.unshift(rec);
@@ -1909,7 +1954,11 @@
           ` : ''}
           <div class="flex items-center justify-between gap-2 text-[11px] text-inkLight pt-1.5 border-t border-[#E5D7C1]">
             <span class="truncate leading-none">— ${escapeHtml(e.source || '摘抄')}</span>
-            <button onclick="drawThisExcerpt('${e.id}')" class="shrink-0 inline-flex items-center gap-1 h-6 px-3 rounded-full bg-warmOrange text-white text-[11px] font-semibold leading-none active:scale-95 transition">🎨 画这句</button>
+            <div class="flex items-center gap-1 shrink-0">
+              <button onclick="openExcerptEditModal('${e.id}')" class="inline-flex items-center h-6 px-2 rounded-lg bg-[#FAF7F0] border border-[#D9C4A0] text-[11px] text-inkLight leading-none">✏️</button>
+              <button id="del-exc-${e.id}" onclick="deleteExcerptItem('${e.id}')" class="h-6 px-2 rounded-lg text-[11px] text-inkLight hover:text-tomato leading-none">删除</button>
+              <button onclick="drawThisExcerpt('${e.id}')" class="shrink-0 inline-flex items-center gap-1 h-6 px-3 rounded-full bg-warmOrange text-white text-[11px] font-semibold leading-none active:scale-95 transition">🎨 画这句</button>
+            </div>
           </div>
         </div>
       `).join('');
@@ -1943,34 +1992,45 @@
     }
 
     function openExcerptModal() {
-      state.excerptModalTags = new Set(['#画题']);
+      state.excerptEditId = null;
+      state.excerptModalTags = new Set();
       document.getElementById('excerpt-input-content').value = '';
       document.getElementById('excerpt-input-source').value = '';
       document.getElementById('excerpt-custom-tag-input').value = '';
+      document.getElementById('excerpt-modal-title').textContent = '📖 摘抄一句喜欢的话';
+      document.getElementById('excerpt-submit-btn').textContent = '收入话签罐';
       renderExcerptModalTags();
       document.getElementById('excerpt-modal').classList.remove('hidden');
     }
-    function closeExcerptModal() { document.getElementById('excerpt-modal').classList.add('hidden'); }
 
-    // 常用标签 + 自定义标签统一渲染，避免自定义标签无处可选
+    function openExcerptEditModal(id) {
+      const item = state.excerpts.find(x => x.id === id);
+      if (!item) return;
+      state.excerptEditId = id;
+      state.excerptModalTags = new Set(item.tags || []);
+      document.getElementById('excerpt-input-content').value = item.content || '';
+      document.getElementById('excerpt-input-source').value = item.source || '';
+      document.getElementById('excerpt-custom-tag-input').value = '';
+      document.getElementById('excerpt-modal-title').textContent = '✏️ 编辑这条话签';
+      document.getElementById('excerpt-submit-btn').textContent = '保存修改';
+      renderExcerptModalTags();
+      document.getElementById('excerpt-modal').classList.remove('hidden');
+    }
+
+    function closeExcerptModal() {
+      state.excerptEditId = null;
+      document.getElementById('excerpt-modal').classList.add('hidden');
+    }
+
+    // 文摘标签选填：默认不选中任何标签，仅展示最近常用的 10 个
     function renderExcerptModalTags() {
-      const wrap = document.getElementById('excerpt-modal-tags');
-      const list = ['#画题', '#放松'];
-      state.excerptModalTags.forEach(t => { if (!list.includes(t)) list.push(t); });
-
-      wrap.innerHTML = list.map(t => {
-        const active = state.excerptModalTags.has(t);
-        return `<button type="button" onclick="toggleExcerptModalTag(this.dataset.tag)" data-tag="${escapeAttr(t)}" class="excerpt-tag-btn px-2.5 py-1 rounded-lg text-xs border ${active ? 'border-sage bg-sageLight text-sageDark font-medium' : 'border-[#D9C4A0] bg-[#FFFEFA] text-inkLight'}">${escapeHtml(t)}</button>`;
-      }).join('');
+      renderTagChips('excerpt-modal-tags', state.excerptModalTags, collectFrequentTags(state.excerpts, 10), 'toggleExcerptModalTag', 'border-sage bg-sageLight text-sageDark font-medium');
     }
 
     function toggleExcerptModalTag(tag) {
       if (!tag) return;
-      if (state.excerptModalTags.has(tag)) {
-        if (state.excerptModalTags.size > 1) state.excerptModalTags.delete(tag);
-      } else {
-        state.excerptModalTags.add(tag);
-      }
+      if (state.excerptModalTags.has(tag)) state.excerptModalTags.delete(tag);
+      else state.excerptModalTags.add(tag);
       renderExcerptModalTags();
     }
 
@@ -1991,13 +2051,48 @@
         showToast('请先输入句子内容哦', '⚠️');
         return;
       }
+      const tags = Array.from(state.excerptModalTags);
+      if (state.excerptEditId) {
+        const item = state.excerpts.find(x => x.id === state.excerptEditId);
+        if (!item) return;
+        item.content = content;
+        item.source = source;
+        item.tags = tags;
+        await dbPut('excerpts', item);
+        closeExcerptModal();
+        renderExcerptsList();
+        showToast('话签已更新 ✏️', '✨');
+        return;
+      }
       const now = Date.now();
-      const item = { id: 'exc-' + now, content, source, tags: Array.from(state.excerptModalTags), createdAt: now };
+      const item = { id: 'exc-' + now, content, source, tags, createdAt: now };
       await dbPut('excerpts', item);
       state.excerpts.unshift(item);
       closeExcerptModal();
       renderExcerptsList();
       showToast('已收入自己的收藏话签 📖', '✨');
+    }
+
+    async function deleteExcerptItem(id) {
+      const btn = document.getElementById(`del-exc-${id}`);
+      if (!btn) return;
+      if (btn.dataset.confirming !== 'true') {
+        btn.dataset.confirming = 'true';
+        btn.textContent = '确认删除?';
+        btn.className = 'h-6 px-2 rounded-lg text-[11px] bg-tomato text-white font-bold leading-none';
+        setTimeout(() => {
+          if (btn && btn.dataset.confirming === 'true') {
+            btn.dataset.confirming = 'false';
+            btn.textContent = '删除';
+            btn.className = 'h-6 px-2 rounded-lg text-[11px] text-inkLight hover:text-tomato leading-none';
+          }
+        }, 3000);
+        return;
+      }
+      await dbDelete('excerpts', id);
+      state.excerpts = state.excerpts.filter(x => x.id !== id);
+      renderExcerptsList();
+      showToast('已从文摘删除', '🍃');
     }
 
     function openBackupModal() {
@@ -2038,6 +2133,44 @@
     function escapeHtml(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
     function escapeAttr(str) { return escapeHtml(str).replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
+    /**
+     * 统计最近常用的标签：按使用次数降序，次数相同则最近用过的在前。
+     * items 需按时间倒序传入（index 越小越新）。
+     */
+    function collectFrequentTags(items, limit) {
+      const stats = new Map();
+      (items || []).forEach((item, idx) => {
+        (item.tags || []).forEach(t => {
+          const s = stats.get(t) || { count: 0, recent: idx };
+          s.count += 1;
+          if (idx < s.recent) s.recent = idx;
+          stats.set(t, s);
+        });
+      });
+      return Array.from(stats.entries())
+        .sort((a, b) => b[1].count - a[1].count || a[1].recent - b[1].recent)
+        .slice(0, limit)
+        .map(([t]) => t);
+    }
+
+    /**
+     * 统一渲染标签选择区：自定义/新选中的标签排在最前，其后是最近常用标签。
+     * 标签为选填项，允许全部取消选中。
+     */
+    function renderTagChips(wrapId, selected, frequent, handlerName, activeCls) {
+      const wrap = document.getElementById(wrapId);
+      if (!wrap) return;
+      const frequentList = frequent || [];
+      const list = [];
+      selected.forEach(t => { if (!frequentList.includes(t)) list.push(t); });
+      frequentList.forEach(t => { if (!list.includes(t)) list.push(t); });
+
+      wrap.innerHTML = list.map(t => {
+        const active = selected.has(t);
+        return `<button type="button" onclick="${handlerName}(this.dataset.tag)" data-tag="${escapeAttr(t)}" class="px-2.5 py-1 rounded-lg text-xs border ${active ? activeCls : 'border-[#D9C4A0] bg-[#FFFEFA] text-inkLight'}">${escapeHtml(t)}</button>`;
+      }).join('');
+    }
+
     /********************************************************************
      * 6. 真实 Canvas 3:4 分享卡绘制
      ********************************************************************/
@@ -2064,7 +2197,117 @@
       renderPosterCanvas();
     }
 
-    function renderPosterCanvas() {
+    function loadImageFromBlob(blob) {
+      return new Promise(resolve => {
+        const url = URL.createObjectURL(blob);
+        const img = new Image();
+        img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+        img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+        img.src = url;
+      });
+    }
+
+    function loadImageFromSrc(src) {
+      return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = src;
+      });
+    }
+
+    // 内联 SVG 画题需补全尺寸后转 dataURL，才能在 canvas 上稳定绘制
+    function svgToImageSrc(svg) {
+      let s = String(svg);
+      if (!/\swidth=/.test(s)) s = s.replace(/<svg\b/, '<svg width="240" height="240"');
+      return 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s);
+    }
+
+    // 在指定矩形里绘制作品主图（圆角裁剪 + contain/cover）
+    function drawPosterMainImage(ctx, x, y, w, h, img, fitMode) {
+      ctx.save();
+      drawRoundedRectPath(ctx, x, y, w, h, 14);
+      ctx.clip();
+      if (img) {
+        const iw = img.naturalWidth || img.width;
+        const ih = img.naturalHeight || img.height;
+        if (iw && ih) {
+          const imgAspect = iw / ih;
+          const boxAspect = w / h;
+          let dw = w, dh = h, dx = x, dy = y;
+          if (fitMode === 'cover') {
+            if (imgAspect > boxAspect) { dw = h * imgAspect; dx = x - (dw - w) / 2; }
+            else { dh = w / imgAspect; dy = y - (dh - h) / 2; }
+            ctx.drawImage(img, dx, dy, dw, dh);
+          } else {
+            ctx.fillStyle = '#FAF7F0';
+            ctx.fillRect(x, y, w, h);
+            if (imgAspect > boxAspect) { dh = w / imgAspect; dy = y + (h - dh) / 2; }
+            else { dw = h * imgAspect; dx = x + (w - dw) / 2; }
+            ctx.drawImage(img, dx, dy, dw, dh);
+          }
+        }
+      }
+      ctx.restore();
+    }
+
+    // 作品下方的小横条：左侧缩放参考图缩略图，右侧标注画题（与作品墙卡片一致）
+    function drawPosterRefStrip(ctx, x, y, w, h, img, title) {
+      ctx.save();
+      drawRoundedRectPath(ctx, x, y, w, h, 12);
+      ctx.fillStyle = '#FAF7F0';
+      ctx.fill();
+      ctx.strokeStyle = '#E5DAC8';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.restore();
+
+      const pad = 10;
+      const thumb = h - pad * 2;
+      const tx = x + pad, ty = y + pad;
+
+      ctx.save();
+      drawRoundedRectPath(ctx, tx, ty, thumb, thumb, 8);
+      ctx.clip();
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fillRect(tx, ty, thumb, thumb);
+      if (img) {
+        const iw = img.naturalWidth || img.width;
+        const ih = img.naturalHeight || img.height;
+        if (iw && ih) {
+          const s = Math.min(thumb / iw, thumb / ih);
+          const dw = iw * s, dh = ih * s;
+          ctx.drawImage(img, tx + (thumb - dw) / 2, ty + (thumb - dh) / 2, dw, dh);
+        }
+      }
+      ctx.restore();
+
+      ctx.save();
+      drawRoundedRectPath(ctx, tx, ty, thumb, thumb, 8);
+      ctx.strokeStyle = '#E5DAC8';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.restore();
+
+      const textX = tx + thumb + 14;
+      const maxW = x + w - pad - textX;
+      ctx.save();
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#8A7E70';
+      ctx.font = "15px 'ZCOOL KuaiLe', sans-serif";
+      ctx.fillText('🎯 参考画题', textX, y + h / 2 - 6);
+      ctx.fillStyle = '#4A4238';
+      ctx.font = "bold 22px 'ZCOOL KuaiLe', sans-serif";
+      let t = String(title || '参考图');
+      if (ctx.measureText(t).width > maxW) {
+        while (t.length > 1 && ctx.measureText(t + '…').width > maxW) t = t.slice(0, -1);
+        t += '…';
+      }
+      ctx.fillText(t, textX, y + h / 2 + 22);
+      ctx.restore();
+    }
+
+    async function renderPosterCanvas() {
       const rec = state.posterRecord;
       if (!rec) return;
       const canvas = document.getElementById('poster-canvas');
@@ -2074,18 +2317,20 @@
       let bgHex = '#FAF7F0';
       if (state.posterTheme === 'kraft') bgHex = '#EFE3CE';
       if (state.posterTheme === 'sage') bgHex = '#E5ECE0';
+      ctx.clearRect(0, 0, w, h);
       ctx.fillStyle = bgHex;
       ctx.fillRect(0, 0, w, h);
 
       const frameX = 50, frameY = 50, frameW = 800, frameH = 1100;
-      
+
+      ctx.save();
       ctx.fillStyle = '#FFFFFF';
       ctx.shadowColor = 'rgba(74, 66, 56, 0.14)';
       ctx.shadowBlur = 36;
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 12;
       ctx.fillRect(frameX, frameY, frameW, frameH);
-      ctx.shadowBlur = 0;
+      ctx.restore();
 
       ctx.strokeStyle = '#EBE1D0';
       ctx.lineWidth = 1.5;
@@ -2097,52 +2342,25 @@
       const imgW = frameW - (imgPad * 2);
       const imgH = 950;
 
-      if (rec.imageBlob) {
-        const url = URL.createObjectURL(rec.imageBlob);
-        const img = new Image();
-        img.onload = () => {
-          ctx.save();
-          drawRoundedRectPath(ctx, imgX, imgY, imgW, imgH, 14);
-          ctx.clip();
+      const mainImg = rec.imageBlob ? await loadImageFromBlob(rec.imageBlob) : null;
+      const hasRef = !!(rec.refSvg || rec.refUrl);
 
-          const iw = img.width, ih = img.height;
-          const imgAspect = iw / ih;
-          const boxAspect = imgW / imgH;
-          let dw = imgW, dh = imgH, dx = imgX, dy = imgY;
+      if (hasRef) {
+        // 我的速写占主图区，参考图做成下方小横条（与作品墙卡片一致）
+        let refImg = null;
+        if (rec.refUrl) refImg = await loadImageFromSrc(rec.refUrl);
+        else if (rec.refSvg) refImg = await loadImageFromSrc(svgToImageSrc(rec.refSvg));
 
-          if (state.posterFitMode === 'cover') {
-            if (imgAspect > boxAspect) {
-              dw = imgH * imgAspect;
-              dx = imgX - (dw - imgW) / 2;
-            } else {
-              dh = imgW / imgAspect;
-              dy = imgY - (dh - imgH) / 2;
-            }
-            ctx.drawImage(img, dx, dy, dw, dh);
-          } else {
-            ctx.fillStyle = '#FAF7F0';
-            ctx.fillRect(imgX, imgY, imgW, imgH);
-            if (imgAspect > boxAspect) {
-              dh = imgW / imgAspect;
-              dy = imgY + (imgH - dh) / 2;
-            } else {
-              dw = imgH * imgAspect;
-              dx = imgX + (imgW - dw) / 2;
-            }
-            ctx.drawImage(img, dx, dy, dw, dh);
-          }
-          ctx.restore();
-          URL.revokeObjectURL(url);
-          finishMinimalistPosterFooter(ctx, rec, w, h, frameX, frameY, frameW, frameH, imgY + imgH);
-        };
-        img.onerror = () => {
-          URL.revokeObjectURL(url);
-          finishMinimalistPosterFooter(ctx, rec, w, h, frameX, frameY, frameW, frameH, imgY + imgH);
-        };
-        img.src = url;
+        const gap = 16;
+        const stripH = 92;
+        const drawH = imgH - gap - stripH;
+        drawPosterMainImage(ctx, imgX, imgY, imgW, drawH, mainImg, state.posterFitMode);
+        drawPosterRefStrip(ctx, imgX, imgY + drawH + gap, imgW, stripH, refImg, rec.refTitle);
       } else {
-        finishMinimalistPosterFooter(ctx, rec, w, h, frameX, frameY, frameW, frameH, imgY + imgH);
+        drawPosterMainImage(ctx, imgX, imgY, imgW, imgH, mainImg, state.posterFitMode);
       }
+
+      finishMinimalistPosterFooter(ctx, rec, w, h, frameX, frameY, frameW, frameH, imgY + imgH);
     }
 
     function drawRoundedRectPath(ctx, x, y, width, height, radius) {
