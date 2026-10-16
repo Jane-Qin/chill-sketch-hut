@@ -39,7 +39,7 @@
           }
         }
       }
-    }
+    };
   </script>
   <style>
     :root {
@@ -146,14 +146,6 @@
       animation: stampSlam 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
     }
 
-    @keyframes floatSlow {
-      0%, 100% { transform: translateY(0px) rotate(-1deg); }
-      50% { transform: translateY(-4px) rotate(1deg); }
-    }
-    .animate-float {
-      animation: floatSlow 3.5s ease-in-out infinite;
-    }
-
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -198,9 +190,10 @@
         </div>
 
         <div class="flex items-center gap-1.5">
-          <button onclick="showOpenStatusToast()" class="open-sign-badge px-2.5 py-1 rounded-full flex items-center gap-1.5 active:scale-95 transition-transform" title="今日训练进度">
+          <!-- 点击展开月度集章册 -->
+          <button onclick="openStampModal()" class="open-sign-badge px-2.5 py-1 rounded-full flex items-center gap-1.5 active:scale-95 transition-transform" title="点击打开月度练习集章册">
             <span id="open-lamp-dot" class="w-2 h-2 rounded-full bg-warmOrange animate-pulse"></span>
-            <span id="open-sign-text" class="text-xs font-semibold text-ink">营业中 · 0次</span>
+            <span id="open-sign-text" class="text-xs font-semibold text-ink">营业中 · 0次 📅</span>
           </button>
 
           <button onclick="openBackupModal()" class="w-8 h-8 rounded-full bg-[#EFE5D4] border border-[#D9C4A0] flex items-center justify-center text-ink hover:bg-[#E5D7C1] active:scale-95 transition" title="数据备份与恢复">
@@ -214,7 +207,6 @@
       </div>
     </header>
 
-    <!-- 主视图区域 -->
     <main class="relative flex-1 overflow-hidden flex flex-col">
 
       <!-- TAB 1: 作品墙 (Gallery & Timeline) -->
@@ -230,7 +222,7 @@
                 id="journal-search-input" 
                 type="text" 
                 placeholder="搜画作碎碎念或 #标签..." 
-                class="w-full pl-8 pr-7 py-1.5 text-xs bg-[#FFFEFA] border border-[#D9C4A0] rounded-full text-ink placeholder-[#9E9283] focus:outline-none focus:border-sage"
+                class="w-full pl-8 pr-7 py-1.5 text-xs bg-[#FFFEFA] border border-[#D9C4A0] rounded-full text-ink placeholder-[#9E9283] focus:outline-none focus:border-sage" 
                 oninput="handleJournalSearch(this.value)"
               />
               <button id="journal-search-clear" onclick="clearJournalSearch()" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-inkLight hover:text-ink">
@@ -238,7 +230,7 @@
               </button>
             </div>
 
-            <!-- 松鸦打气移到顶部作为轻量彩蛋按钮 -->
+            <!-- 松鸦打气按钮 -->
             <button 
               onclick="triggerCheerUp()" 
               class="shrink-0 px-2.5 py-1.5 rounded-full bg-[#FFFEFA] border border-warmOrange text-xs font-semibold text-ink flex items-center gap-1 shadow-2xs active:scale-95 transition"
@@ -257,7 +249,7 @@
             </button>
           </div>
 
-          <!-- 核心重点：置顶全宽超级醒目的【＋ 发布画作】主功能大按钮 -->
+          <!-- 置顶全宽【＋ 发布画作】主功能大按钮 -->
           <button 
             onclick="openComposerModal()" 
             class="w-full py-2.5 px-4 rounded-2xl bg-sage hover:bg-sageDark border-2 border-sageDark shadow-md flex items-center justify-center gap-2 text-xs font-bold text-white active:scale-98 transition"
@@ -322,7 +314,7 @@
                 id="excerpt-search-input" 
                 type="text" 
                 placeholder="搜摘抄的句子、出处或标签..." 
-                class="w-full pl-8 pr-4 py-1.5 text-xs bg-[#FFFEFA] border border-[#D9C4A0] rounded-full text-ink placeholder-[#9E9283] focus:outline-none focus:border-sage"
+                class="w-full pl-8 pr-4 py-1.5 text-xs bg-[#FFFEFA] border border-[#D9C4A0] rounded-full text-ink placeholder-[#9E9283] focus:outline-none focus:border-sage" 
                 oninput="handleExcerptSearch(this.value)"
               />
             </div>
@@ -331,18 +323,14 @@
             </button>
           </div>
 
-          <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5" id="excerpt-filter-bar">
-            <button onclick="setExcerptFilter('all')" data-filter="all" class="excerpt-filter-chip px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-sage text-white transition shrink-0">全部话签</button>
-            <button onclick="setExcerptFilter('starred')" data-filter="starred" class="excerpt-filter-chip px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#EFE5D4] text-inkLight transition shrink-0">⭐ 收藏</button>
-            <button onclick="setExcerptFilter('#画题')" data-filter="#画题" class="excerpt-filter-chip px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#EFE5D4] text-inkLight transition shrink-0">#画题</button>
-            <button onclick="setExcerptFilter('#放松')" data-filter="#放松" class="excerpt-filter-chip px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#EFE5D4] text-inkLight transition shrink-0">#放松</button>
-          </div>
+          <!-- 标签筛选条：由 renderExcerptFilterBar() 依据现有话签标签动态生成 -->
+          <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5" id="excerpt-filter-bar"></div>
         </div>
 
         <div id="excerpts-list-container" class="flex-1 overflow-y-auto px-3.5 pt-3 pb-24 space-y-3.5 no-scrollbar"></div>
       </section>
 
-      <!-- TAB 3: 耐丑训练室 -->
+      <!-- TAB 3: 耐丑训练室 (10分钟计时器与专属图库抽取) -->
       <section id="view-training" class="hidden flex-1 flex-col overflow-hidden">
         <div class="shrink-0 px-3.5 py-2.5 bg-[#FAF7F0]/95 backdrop-blur-sm border-b border-[#EAE0CE] z-20 flex items-center justify-between gap-2">
           <div class="flex bg-[#EFE5D4] p-1 rounded-full border border-[#D9C4A0] flex-1">
@@ -356,10 +344,11 @@
         </div>
 
         <div class="flex-1 overflow-y-auto px-3.5 pt-3 pb-24 flex flex-col justify-between no-scrollbar">
+          <!-- 计时常亮横幅 -->
           <div id="training-active-banner" class="hidden mb-3 rounded-2xl p-3.5 bg-gradient-to-r from-[#E08A4B] to-[#D96B4A] text-white shadow-md">
             <div class="flex items-center justify-between">
               <span class="px-2 py-0.5 rounded-full bg-white/20 text-[11px] font-medium backdrop-blur-sm">✨ 随手画两笔 · 动笔就很酷</span>
-              <span class="text-[10px] text-white/85 flex items-center gap-1">屏幕常亮中</span>
+              <span class="text-[10px] text-white/85 flex items-center gap-1">⏱️ 专注计时中</span>
             </div>
             <div id="timer-display-block" class="mt-2">
               <div class="flex items-baseline justify-between">
@@ -377,32 +366,40 @@
             <div class="relative journal-card rounded-2xl p-3.5 bg-[#FFFEFA] flex-1 flex flex-col justify-between">
               <div class="washi-tape washi-pink -top-2.5 left-1/2 -translate-x-1/2 rotate-[1deg]"></div>
               <div class="flex items-center justify-between mb-2">
-                <div>
-                  <span id="ref-image-category" class="text-[10px] px-2 py-0.5 rounded-md bg-kraftLight text-ink font-medium">生活小物</span>
-                  <h3 id="ref-image-title" class="text-sm font-bold text-ink inline-block ml-1.5">清晨的马克杯</h3>
+                <div class="flex items-center gap-1.5 overflow-hidden">
+                  <span id="ref-image-category" class="text-[10px] px-2 py-0.5 rounded-md bg-kraftLight text-ink font-medium shrink-0">生活小物</span>
+                  <h3 id="ref-image-title" class="text-sm font-bold text-ink truncate">清晨的马克杯</h3>
+                  <span id="ref-drawn-badge" class="text-[10px] px-1.5 py-0.2 rounded bg-sageLight text-sageDark font-semibold shrink-0">🌱 新图</span>
                 </div>
-                <span id="ref-image-tip" class="text-[11px] text-inkLight">观察大形状，点击放大</span>
+                <span id="ref-image-tip" class="text-[11px] text-inkLight shrink-0">观察大形状</span>
               </div>
 
-              <div onclick="openCurrentRefInLightbox()" class="relative flex-1 min-h-[250px] max-h-[360px] rounded-xl bg-[#FAF7F0] border-2 border-dashed border-[#D9C4A0] flex items-center justify-center overflow-hidden p-3 cursor-zoom-in group">
+              <!-- 参考画题展示区（点击可放大） -->
+              <div onclick="openCurrentRefInLightbox()" class="relative flex-1 min-h-[230px] max-h-[350px] rounded-xl bg-[#FAF7F0] border-2 border-dashed border-[#D9C4A0] flex items-center justify-center overflow-hidden p-2 cursor-zoom-in group shadow-inner">
                 <div id="ref-svg-container" class="w-full h-full flex items-center justify-center"></div>
-                <img id="ref-custom-img" src="" alt="自选画题" class="hidden max-w-full max-h-full object-contain rounded-lg" />
+                <img id="ref-custom-img" src="" alt="自选画题" class="hidden w-full h-full object-contain rounded-lg" />
               </div>
 
+              <!-- 待机操作栏 -->
               <div id="image-idle-controls" class="mt-3 pt-2.5 border-t border-[#EAE0CE] space-y-2.5">
                 <div class="flex items-center gap-2">
-                  <button onclick="nextBuiltinRefImage()" class="flex-1 py-2 px-3 rounded-xl bg-[#EFE5D4] text-xs font-semibold text-ink">🎲 换一张</button>
-                  <label for="training-custom-ref-input" class="flex-1 py-2 px-3 rounded-xl bg-[#EFE5D4] text-xs font-semibold text-ink cursor-pointer text-center">📷 自选图</label>
-                  <input id="training-custom-ref-input" type="file" accept="image/*" class="hidden" onchange="handleCustomRefUpload(event)" />
+                  <button onclick="openGalleryDrawer()" class="flex-1 py-2 px-2.5 rounded-xl bg-[#EFE5D4] hover:bg-[#E5D7C1] text-xs font-semibold text-ink flex items-center justify-center gap-1 active:scale-95 transition">
+                    <span>🗂️ 我的图库</span>
+                    <span id="lib-count-tag" class="text-[10px] bg-white/70 px-1.5 py-0.2 rounded-full text-inkLight">0</span>
+                  </button>
+                  <button onclick="pickNextSmartPrompt()" class="flex-1 py-2 px-2.5 rounded-xl bg-[#EFE5D4] hover:bg-[#E5D7C1] text-xs font-semibold text-ink flex items-center justify-center gap-1 active:scale-95 transition">
+                    <span>🎲 换一题 (新图优先)</span>
+                  </button>
                 </div>
-                <button onclick="startImageTrainingTimer()" class="w-full py-3 rounded-xl bg-warmOrange text-white text-sm font-bold shadow-md">
-                  选好画题了，开始 10 分钟速写 →
+                <button onclick="startImageTrainingTimer()" class="w-full py-3 rounded-xl bg-warmOrange hover:bg-warmOrange/95 text-white text-sm font-bold shadow-md active:scale-98 transition flex items-center justify-center gap-1.5">
+                  <span>⏱️ 选好画题了 · 开始 10 分钟速写</span>
                 </button>
               </div>
 
+              <!-- 运行中操作栏 -->
               <div id="image-running-controls" class="hidden mt-3 pt-2.5 border-t border-[#EAE0CE] flex items-center gap-2">
-                <button onclick="cancelTrainingSession()" class="py-2.5 px-4 rounded-xl bg-[#EFE5D4] text-xs text-inkLight">放弃</button>
-                <button onclick="finishTrainingSession()" class="flex-1 py-2.5 px-4 rounded-xl bg-sage text-white text-sm font-bold shadow-md">💮 画完啦！交卷盖章</button>
+                <button onclick="abortTrainingSession()" class="py-2.5 px-4 rounded-xl bg-[#EFE5D4] text-xs text-inkLight hover:text-tomato active:scale-95 transition">提前放弃</button>
+                <button onclick="finishTrainingSession(true)" class="flex-1 py-2.5 px-4 rounded-xl bg-sage hover:bg-sageDark text-white text-sm font-bold shadow-md active:scale-95 transition">💮 提前交卷盖章</button>
               </div>
             </div>
           </div>
@@ -429,8 +426,8 @@
                 <button onclick="startSentenceTraining()" class="w-full py-3 rounded-xl bg-sage text-white text-sm font-bold shadow-md">🎨 开始画这句（不限时）</button>
               </div>
               <div id="sentence-running-controls" class="hidden flex items-center gap-2 pt-2">
-                <button onclick="cancelTrainingSession()" class="py-2.5 px-4 rounded-xl bg-[#EFE5D4] text-xs text-inkLight">收起</button>
-                <button onclick="finishTrainingSession()" class="flex-1 py-2.5 px-4 rounded-xl bg-warmOrange text-white text-sm font-bold shadow-md">💮 画完啦！盖章打卡</button>
+                <button onclick="abortTrainingSession()" class="py-2.5 px-4 rounded-xl bg-[#EFE5D4] text-xs text-inkLight">收起</button>
+                <button onclick="finishTrainingSession(true)" class="flex-1 py-2.5 px-4 rounded-xl bg-warmOrange text-white text-sm font-bold shadow-md">💮 画完啦！盖章打卡</button>
               </div>
             </div>
           </div>
@@ -622,7 +619,6 @@
           <h3 id="excerpt-modal-title" class="font-display text-base text-ink">📖 摘抄一句喜欢的话</h3>
           <button onclick="closeExcerptModal()" class="w-7 h-7 rounded-full bg-[#EFE5D4] text-ink flex items-center justify-center text-xs">✕</button>
         </div>
-        <input type="hidden" id="excerpt-edit-id" value="" />
         <div class="space-y-3">
           <div>
             <label class="text-xs font-semibold text-ink block mb-1">句子内容 *</label>
@@ -634,9 +630,10 @@
           </div>
           <div>
             <label class="text-xs font-semibold text-ink block mb-1">标签</label>
-            <div class="flex flex-wrap gap-1.5" id="excerpt-modal-tags">
-              <button type="button" onclick="toggleExcerptModalTag('#画题')" data-tag="#画题" class="excerpt-tag-btn px-2.5 py-1 rounded-lg text-xs border border-sage bg-sageLight text-sageDark font-medium">#画题</button>
-              <button type="button" onclick="toggleExcerptModalTag('#放松')" data-tag="#放松" class="excerpt-tag-btn px-2.5 py-1 rounded-lg text-xs border border-[#D9C4A0] bg-[#FFFEFA] text-inkLight">#放松</button>
+            <div class="flex flex-wrap gap-1.5 mb-2" id="excerpt-modal-tags"></div>
+            <div class="flex items-center gap-1.5">
+              <input id="excerpt-custom-tag-input" type="text" placeholder="自定义标签（如 治愈）" class="flex-1 rounded-xl px-2.5 py-1.5 text-xs bg-[#FFFEFA] border border-[#D9C4A0] text-ink focus:outline-none focus:border-sage" />
+              <button type="button" onclick="addCustomTagToExcerptModal()" class="px-3 py-1.5 rounded-xl bg-[#EFE5D4] text-xs font-semibold text-ink">＋添加</button>
             </div>
           </div>
           <button onclick="saveExcerptItem()" class="w-full py-2.5 rounded-xl bg-sage text-white text-xs font-bold shadow-md mt-2">收入话签罐</button>
@@ -673,6 +670,72 @@
       </div>
       <p id="lightbox-caption" class="text-xs text-[#FAF7F0]/90 mt-3 text-center max-w-xs line-clamp-2"></p>
       <span class="text-[11px] text-[#FAF7F0]/60 mt-1">轻触任意处关闭</span>
+    </div>
+
+    <!-- 🗂️ 专属参考图库抽屉 (底部滑出木质抽屉) -->
+    <div id="drawer-backdrop" class="hidden fixed inset-0 z-40 bg-black/40 backdrop-blur-xs transition-opacity duration-300" onclick="closeGalleryDrawer()"></div>
+    <aside id="gallery-drawer" class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[460px] max-h-[85dvh] bg-[#FAF7F0] border-t-2 border-[#C9A87C] rounded-t-3xl shadow-2xl z-50 flex flex-col transform translate-y-full transition-transform duration-300 ease-out">
+      <div class="p-3.5 border-b border-[#E3D5C0] flex flex-col gap-2">
+        <div class="w-10 h-1 bg-[#D9C4A0] rounded-full mx-auto cursor-pointer" onclick="closeGalleryDrawer()"></div>
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-display text-ink flex items-center gap-1.5">
+              <span>🗂️ 专属参考图库</span>
+              <span id="drawer-total-count" class="text-[10px] px-2 py-0.5 rounded-full bg-[#EFE5D4] text-ink font-sans">0 张</span>
+            </h3>
+            <p class="text-[10px] text-inkLight">点击直选画题，优先抽取未练新图</p>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <label class="px-2.5 py-1.5 rounded-xl bg-sage hover:bg-sageDark text-white text-xs font-semibold cursor-pointer shadow-sm active:scale-95 transition flex items-center gap-1">
+              <span>＋ 批量导入</span>
+              <input type="file" id="drawer-bulk-input" multiple accept="image/*" class="hidden" onchange="handleBulkImport(event)">
+            </label>
+            <button onclick="closeGalleryDrawer()" class="w-7 h-7 rounded-full bg-[#EFE5D4] text-ink text-xs font-bold">✕</button>
+          </div>
+        </div>
+      </div>
+      <div class="flex-1 overflow-y-auto p-3.5 no-scrollbar">
+        <div id="drawer-gallery-grid" class="grid grid-cols-3 gap-2.5"></div>
+        <div id="drawer-empty-tip" class="hidden py-10 flex flex-col items-center justify-center text-center text-inkLight">
+          <span class="text-3xl mb-1">🖼️</span>
+          <p class="text-xs font-bold text-ink">图库暂无参考图</p>
+          <p class="text-[10px] mt-0.5">点击右上角批量导入相册照片，系统将自动去重</p>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 💮 月度集章册 (7 列日历模态框) -->
+    <div id="stamp-modal" class="hidden fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4">
+      <div class="relative w-full max-w-sm journal-card rounded-3xl p-5 bg-[#FAF7F0] border-2 border-[#C9A87C] shadow-2xl flex flex-col">
+        <div class="washi-tape washi-yellow -top-2.5 left-1/2 -translate-x-1/2"></div>
+        <div class="flex items-center justify-between pb-2.5 border-b border-[#E3D5C0]">
+          <div>
+            <h3 class="font-display text-base text-ink">💮 月度速写集章册</h3>
+            <p class="text-[10px] text-inkLight">每日动笔即盖章，≥5 次点亮金星 🌟</p>
+          </div>
+          <button onclick="closeStampModal()" class="w-7 h-7 rounded-full bg-[#EFE5D4] text-ink flex items-center justify-center text-xs font-bold">✕</button>
+        </div>
+        <!-- 月份切换 -->
+        <div class="flex items-center justify-between my-3">
+          <button onclick="changeStampMonth(-1)" class="px-2 py-1 rounded-lg bg-[#EFE5D4] text-xs font-bold text-ink">‹ 上月</button>
+          <span id="stamp-month-title" class="font-display text-sm text-ink">2026 年 10 月</span>
+          <button onclick="changeStampMonth(1)" class="px-2 py-1 rounded-lg bg-[#EFE5D4] text-xs font-bold text-ink">下月 ›</button>
+        </div>
+        <!-- 7 列日历星期头 -->
+        <div class="grid grid-cols-7 gap-1 text-center font-bold text-[11px] text-inkLight mb-1.5">
+          <div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div><div>日</div>
+        </div>
+        <!-- 日历天数网格 -->
+        <div id="stamp-calendar-grid" class="grid grid-cols-7 gap-1 text-center text-xs"></div>
+        <!-- 统计 -->
+        <div class="mt-3.5 p-2.5 rounded-xl bg-[#EFE5D4]/70 border border-[#D9C4A0] flex items-center justify-between text-[11px] text-ink">
+          <div>当月总计：<strong id="stamp-month-total" class="font-bold text-sageDark">0</strong> 次</div>
+          <div class="flex items-center gap-2">
+            <span>💮 基础章</span>
+            <span>🌟 金星章(≥5)</span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- 全屏沉浸/打气 Toast (加宽 & 停留时间 4.5 秒) -->
@@ -719,12 +782,16 @@
 
     const BUILTIN_REF_IMAGES = [
       {
-        id: 'ref-mug', category: '生活小物', title: '冒热气的胖胖马克杯', tip: '先画圆润长方形，再添耳朵',
+        id: 'ref-mug', category: '生活小物', title: '冒热气的胖胖马克杯', tip: '先画圆润长方形，再添耳朵', drawnCount: 0,
         svg: `<svg viewBox="0 0 240 240" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="110" cy="192" rx="64" ry="12" fill="#EFE5D4"/><path d="M62 86H158V154C158 176 140 190 110 190C80 190 62 176 62 154V86Z" fill="#FAF7F0" stroke="#4A4238" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M158 102H178C190 102 198 112 198 124C198 136 190 146 178 146H158" stroke="#4A4238" stroke-width="5" stroke-linecap="round"/><ellipse cx="110" cy="86" rx="48" ry="9" fill="#D9C4A0" stroke="#4A4238" stroke-width="4"/><path d="M92 135C102 143 118 143 128 135" stroke="#4A4238" stroke-width="4" stroke-linecap="round"/><circle cx="90" cy="120" r="4" fill="#4A4238"/><circle cx="130" cy="120" r="4" fill="#4A4238"/></svg>`
       },
       {
-        id: 'ref-plant', category: '治愈植物', title: '窗台上的圆叶小盆栽', tip: '梯形花盆 + 圆圆叶片',
+        id: 'ref-plant', category: '治愈植物', title: '窗台上的圆叶小盆栽', tip: '梯形花盆 + 圆圆叶片', drawnCount: 0,
         svg: `<svg viewBox="0 0 240 240" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="120" cy="200" rx="54" ry="10" fill="#EFE5D4"/><polygon points="80,128 160,128 148,196 92,196" fill="#E08A4B" stroke="#4A4238" stroke-width="5" stroke-linejoin="round"/><rect x="74" y="116" width="92" height="16" rx="6" fill="#D96B4A" stroke="#4A4238" stroke-width="5"/><path d="M120 116V62" stroke="#6B7F5E" stroke-width="5" stroke-linecap="round"/><circle cx="120" cy="52" r="18" fill="#8A9A7B" stroke="#4A4238" stroke-width="4"/><circle cx="78" cy="58" r="16" fill="#8A9A7B" stroke="#4A4238" stroke-width="4"/><circle cx="162" cy="48" r="17" fill="#8A9A7B" stroke="#4A4238" stroke-width="4"/></svg>`
+      },
+      {
+        id: 'ref-bread', category: '静物写生', title: '牛皮纸袋与法棍', tip: '抓纸袋折痕与粗粝长条', drawnCount: 0,
+        svg: `<svg viewBox="0 0 240 240" class="w-full h-full" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="120" cy="204" rx="60" ry="10" fill="#EFE5D4"/><path d="M75 110L82 195H158L165 110L145 118L120 108L95 118L75 110Z" fill="#D9C4A0" stroke="#4A4238" stroke-width="4"/><path d="M100 110L112 40C114 30 134 30 136 40L144 110" fill="#E08A4B" stroke="#4A4238" stroke-width="4"/><line x1="114" y1="58" x2="132" y2="66" stroke="#FAF7F0" stroke-width="3" stroke-linecap="round"/><line x1="116" y1="80" x2="134" y2="88" stroke="#FAF7F0" stroke-width="3" stroke-linecap="round"/></svg>`
       }
     ];
 
@@ -810,8 +877,13 @@
       customRefBlob: null,
       currentSentence: BUILTIN_SENTENCE_PROMPTS[0],
       timerDeadline: 0,
-      timerRAF: null,
-      completeCheckinBlob: null
+      timerTotalSeconds: 600,
+      timerInterval: null,
+      completeCheckinBlob: null,
+      library: [],
+      currentPromptItem: null,
+      stampCalendarYear: new Date().getFullYear(),
+      stampCalendarMonth: new Date().getMonth()
     };
 
     function getTodayDateKey(ts = Date.now()) {
@@ -833,7 +905,7 @@
       }, durationMs);
     }
 
-    // 内存 URL 管理
+    // 内存 URL 安全管理
     const activeBlobUrls = new Set();
     function createManagedUrl(blob) {
       if (!blob) return '';
@@ -846,9 +918,46 @@
       activeBlobUrls.clear();
     }
 
-    /********************************************************************
-     * 2. 初始化种子数据
-     ********************************************************************/
+    /**
+     * 解决 TypeError: Cannot read properties of undefined (reading 'result')
+     * 采用标准的 r.result 直接访问，附带严密的 try/catch 保护
+     */
+    function blobToDataURL(blob) {
+      return new Promise((resolve, reject) => {
+        if (!blob) return resolve('');
+        const r = new FileReader();
+        r.onload = function() {
+          resolve(r.result || '');
+        };
+        r.onerror = function() {
+          resolve('');
+        };
+        try {
+          r.readAsDataURL(blob);
+        } catch (err) {
+          resolve('');
+        }
+      });
+    }
+
+    function readTextFile(file) {
+      return new Promise((resolve) => {
+        if (!file) return resolve('');
+        const r = new FileReader();
+        r.onload = function() {
+          resolve(r.result || '');
+        };
+        r.onerror = function() {
+          resolve('');
+        };
+        try {
+          r.readAsText(file);
+        } catch (e) {
+          resolve('');
+        }
+      });
+    }
+
     async function initSeedData() {
       const recs = await dbGetAll('records');
       const excs = await dbGetAll('excerpts');
@@ -862,7 +971,7 @@
       }
       if (excs.length === 0) {
         const now = Date.now();
-        await dbPut('excerpts', { id: 'exc-1', content: '不必每笔都精准，摇晃的线条里藏着你当下的呼吸与温度。', source: '松鸦店长手记', tags: ['#放松', '#画题'], starred: true, createdAt: now });
+        await dbPut('excerpts', { id: 'exc-1', content: '不必每笔都精准，摇晃的线条里藏着你当下的呼吸与温度。', source: '松鸦店长手记', tags: ['#放松', '#画题'], createdAt: now });
       }
     }
 
@@ -883,10 +992,25 @@
       const todayKey = getTodayDateKey();
       state.todayCount = state.progressMap.get(todayKey) || 0;
 
+      // 初始化专属图库
+      try {
+        const storedLib = localStorage.getItem('chill_sketch_gallery_v2');
+        if (storedLib) {
+          state.library = JSON.parse(storedLib);
+        } else {
+          state.library = [...BUILTIN_REF_IMAGES];
+        }
+      } catch (e) {
+        state.library = [...BUILTIN_REF_IMAGES];
+      }
+
+      state.currentPromptItem = state.library[0] || BUILTIN_REF_IMAGES[0];
+
       updateOpenStatusBadge();
       renderJournalTimeline();
       renderExcerptsList();
       renderTrainingRefStage();
+      updateLibraryCountUI();
     }
 
     /********************************************************************
@@ -895,13 +1019,9 @@
     function updateOpenStatusBadge() {
       const c = state.todayCount;
       const textEl = document.getElementById('open-sign-text');
-      if (c === 0) textEl.textContent = '营业中 · 0次';
-      else if (c < 5) textEl.textContent = `营业中 · 今日${c}次`;
-      else textEl.textContent = `🔥 超常营业 · ${c}次 ⭐`;
-    }
-
-    function showOpenStatusToast() {
-      showToast(`今日已在画坊完成 ${state.todayCount} 次动笔！每一枚印章都算数~`, '💮', 5000);
+      if (c === 0) textEl.textContent = '营业中 · 0次 📅';
+      else if (c < 5) textEl.textContent = `营业中 · 今日${c}次 📅`;
+      else textEl.textContent = `🔥 超常营业 · ${c}次 🌟`;
     }
 
     function openComposerModal() {
@@ -1121,10 +1241,11 @@
       state.editRecordTags.forEach(t => { if (!base.includes(t)) base.push(t); });
       wrap.innerHTML = base.map(t => {
         const active = state.editRecordTags.has(t);
-        return `<button type="button" onclick="toggleEditRecordTag('${t}')" class="px-2.5 py-1 rounded-lg text-xs border ${active ? 'border-sage bg-sageLight text-sageDark font-semibold' : 'border-[#D9C4A0] bg-[#FFFEFA] text-inkLight'}">${t}</button>`;
+        return `<button type="button" onclick="toggleEditRecordTag(this.dataset.tag)" data-tag="${escapeAttr(t)}" class="px-2.5 py-1 rounded-lg text-xs border ${active ? 'border-sage bg-sageLight text-sageDark font-semibold' : 'border-[#D9C4A0] bg-[#FFFEFA] text-inkLight'}">${escapeHtml(t)}</button>`;
       }).join('');
     }
     function toggleEditRecordTag(t) {
+      if (!t) return;
       if (state.editRecordTags.has(t)) { if (state.editRecordTags.size > 1) state.editRecordTags.delete(t); }
       else state.editRecordTags.add(t);
       renderEditRecordTagList();
@@ -1194,54 +1315,184 @@
       document.getElementById('mode-btn-image').className = m === 'image' ? 'flex-1 py-1 rounded-full text-xs font-semibold bg-sage text-white shadow-sm transition' : 'flex-1 py-1 rounded-full text-xs font-semibold text-inkLight transition';
       document.getElementById('mode-btn-sentence').className = m === 'sentence' ? 'flex-1 py-1 rounded-full text-xs font-semibold bg-sage text-white shadow-sm transition' : 'flex-1 py-1 rounded-full text-xs font-semibold text-inkLight transition';
     }
+
     function renderTrainingRefStage() {
-      const item = BUILTIN_REF_IMAGES[state.currentRefIdx % BUILTIN_REF_IMAGES.length];
-      document.getElementById('ref-image-title').textContent = item.title;
-      document.getElementById('ref-image-category').textContent = item.category;
-      document.getElementById('ref-image-tip').textContent = item.tip;
-      document.getElementById('ref-svg-container').innerHTML = item.svg;
+      const item = state.currentPromptItem || BUILTIN_REF_IMAGES[0];
+      document.getElementById('ref-image-title').textContent = item.title || '参考画题';
+      document.getElementById('ref-image-category').textContent = item.category || '自选画题';
+      document.getElementById('ref-image-tip').textContent = item.tip || '观察轮廓与体量感';
+
+      const badge = document.getElementById('ref-drawn-badge');
+      if (!item.drawnCount || item.drawnCount === 0) {
+        badge.textContent = '🌱 新图';
+        badge.className = 'text-[10px] px-1.5 py-0.2 rounded bg-sageLight text-sageDark font-semibold shrink-0';
+      } else {
+        badge.textContent = `已练 ${item.drawnCount} 次`;
+        badge.className = 'text-[10px] px-1.5 py-0.2 rounded bg-[#EFE5D4] text-inkLight font-semibold shrink-0';
+      }
+
+      const svgContainer = document.getElementById('ref-svg-container');
+      const customImg = document.getElementById('ref-custom-img');
+
+      if (item.svg) {
+        customImg.classList.add('hidden');
+        customImg.src = '';
+        svgContainer.classList.remove('hidden');
+        svgContainer.innerHTML = item.svg;
+      } else if (item.url) {
+        svgContainer.classList.add('hidden');
+        svgContainer.innerHTML = '';
+        customImg.classList.remove('hidden');
+        customImg.src = item.url;
+      }
     }
-    function nextBuiltinRefImage() { state.currentRefIdx++; renderTrainingRefStage(); }
+
+    function openCurrentRefInLightbox() {
+      const item = state.currentPromptItem || BUILTIN_REF_IMAGES[0];
+      if (item.url) {
+        openLightbox(item.url, item.title || '参考画题');
+      } else if (item.svg) {
+        document.getElementById('lightbox-img').classList.add('hidden');
+        const holder = document.getElementById('lightbox-svg-holder');
+        holder.classList.remove('hidden');
+        holder.innerHTML = item.svg;
+        document.getElementById('lightbox-caption').textContent = item.title || '参考画题';
+        document.getElementById('lightbox-modal').classList.remove('hidden');
+      }
+    }
+
+    /********************************************************************
+     * ⏱️ 10 分钟倒计时系统核心
+     ********************************************************************/
+    function formatClock(seconds) {
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    }
+
+    function updateTimerUI(secondsLeft) {
+      const clockEl = document.getElementById('timer-clock-text');
+      const barEl = document.getElementById('timer-progress-bar');
+      clockEl.textContent = formatClock(secondsLeft);
+      const percent = Math.max(0, Math.min(100, (secondsLeft / state.timerTotalSeconds) * 100));
+      barEl.style.width = `${percent}%`;
+
+      if (secondsLeft <= 60) {
+        barEl.classList.remove('bg-white');
+        barEl.classList.add('bg-yellow-300');
+      } else {
+        barEl.classList.remove('bg-yellow-300');
+        barEl.classList.add('bg-white');
+      }
+    }
+
     function startImageTrainingTimer() {
+      if (state.trainingRunning) return;
+      clearInterval(state.timerInterval);
+
       state.trainingRunning = true;
+      state.timerTotalSeconds = 600; // 10分钟速写
+      state.timerDeadline = Date.now() + state.timerTotalSeconds * 1000;
+
+      updateTimerUI(state.timerTotalSeconds);
+
       document.getElementById('training-active-banner').classList.remove('hidden');
       document.getElementById('image-idle-controls').classList.add('hidden');
       document.getElementById('image-running-controls').classList.remove('hidden');
       document.getElementById('nav-training-running-dot').classList.remove('hidden');
+
+      state.timerInterval = setInterval(() => {
+        const remaining = Math.max(0, Math.ceil((state.timerDeadline - Date.now()) / 1000));
+        updateTimerUI(remaining);
+
+        if (remaining <= 0) {
+          clearInterval(state.timerInterval);
+          state.timerInterval = null;
+          finishTrainingSession(false);
+        }
+      }, 1000);
+
+      showToast('10 分钟速写开始！允许粗糙与变形，动笔即胜利 ⏱️', '🎨');
     }
-    function startSentenceTraining() {
-      state.trainingRunning = true;
-      document.getElementById('training-active-banner').classList.remove('hidden');
-      document.getElementById('sentence-idle-controls').classList.add('hidden');
-      document.getElementById('sentence-running-controls').classList.remove('hidden');
-      document.getElementById('nav-training-running-dot').classList.remove('hidden');
-    }
-    function cancelTrainingSession() {
+
+    function abortTrainingSession() {
+      if (!state.trainingRunning) return;
+      clearInterval(state.timerInterval);
+      state.timerInterval = null;
       state.trainingRunning = false;
+
       document.getElementById('training-active-banner').classList.add('hidden');
       document.getElementById('image-idle-controls').classList.remove('hidden');
       document.getElementById('image-running-controls').classList.add('hidden');
       document.getElementById('sentence-idle-controls').classList.remove('hidden');
       document.getElementById('sentence-running-controls').classList.add('hidden');
       document.getElementById('nav-training-running-dot').classList.add('hidden');
-      showToast('已结束本局训练', '🍃');
+      updateTimerUI(600);
+
+      showToast('随时可以停笔休息，状态好时再来画 🍃', '🍵');
     }
-    async function finishTrainingSession() {
-      cancelTrainingSession();
+
+    function startSentenceTraining() {
+      state.trainingRunning = true;
+      document.getElementById('training-active-banner').classList.remove('hidden');
+      document.getElementById('timer-display-block').classList.add('hidden');
+      document.getElementById('sentence-idle-controls').classList.add('hidden');
+      document.getElementById('sentence-running-controls').classList.remove('hidden');
+      document.getElementById('nav-training-running-dot').classList.remove('hidden');
+      showToast('一句话自由涂鸦开始，不设限时，尽情享受线条！', '💬');
+    }
+
+    async function finishTrainingSession(isEarly = false) {
+      clearInterval(state.timerInterval);
+      state.timerInterval = null;
+      state.trainingRunning = false;
+
+      document.getElementById('training-active-banner').classList.add('hidden');
+      document.getElementById('image-idle-controls').classList.remove('hidden');
+      document.getElementById('image-running-controls').classList.add('hidden');
+      document.getElementById('sentence-idle-controls').classList.remove('hidden');
+      document.getElementById('sentence-running-controls').classList.add('hidden');
+      document.getElementById('nav-training-running-dot').classList.add('hidden');
+      document.getElementById('timer-display-block').classList.remove('hidden');
+      updateTimerUI(600);
+
+      // 累计画题练习次数
+      if (state.currentPromptItem) {
+        state.currentPromptItem.drawnCount = (state.currentPromptItem.drawnCount || 0) + 1;
+        saveLibraryStorage();
+        renderTrainingRefStage();
+      }
+
       state.todayCount++;
       const todayKey = getTodayDateKey();
       state.progressMap.set(todayKey, state.todayCount);
       await dbPut('trainingProgress', { dateKey: todayKey, count: state.todayCount });
       updateOpenStatusBadge();
+
+      triggerConfettiFireworks();
+
       state.completeCheckinBlob = null;
       document.getElementById('complete-img-preview-box').classList.add('hidden');
       document.getElementById('complete-upload-label').classList.remove('hidden');
+
+      const titleEl = document.getElementById('complete-modal-title');
+      const subtitleEl = document.getElementById('complete-modal-subtitle');
+      if (isEarly) {
+        titleEl.textContent = '提前交卷 · 敢于停笔！';
+        subtitleEl.textContent = `今日第 ${state.todayCount} 次完成速写，不纠结细节就是大师风范`;
+      } else {
+        titleEl.textContent = '10 分钟到！脱敏盖章认证';
+        subtitleEl.textContent = `今日已动笔 ${state.todayCount} 次，丑画也是珍贵的成长印记`;
+      }
+
       document.getElementById('training-complete-modal').classList.remove('hidden');
     }
+
     function closeTrainingCompleteModal(skip = false) {
       document.getElementById('training-complete-modal').classList.add('hidden');
       if (skip) showToast(`今日已完成 ${state.todayCount} 次动笔！`, '💮');
     }
+
     async function handleCompletePhotoSelect(e) {
       const f = e.target.files && e.target.files[0];
       if (!f) return;
@@ -1250,14 +1501,17 @@
       document.getElementById('complete-img-preview-box').classList.remove('hidden');
       document.getElementById('complete-upload-label').classList.add('hidden');
     }
+
     function clearCompleteModalImg() {
       state.completeCheckinBlob = null;
       document.getElementById('complete-img-preview-box').classList.add('hidden');
       document.getElementById('complete-upload-label').classList.remove('hidden');
     }
+
     async function saveTrainingCheckinToJournal() {
       if (!state.completeCheckinBlob) {
-        showToast('📸 贴上作品墙需要先拍下速写照片哦~', '⚠️'); return;
+        showToast('📸 贴上作品墙需要先拍下速写照片哦~', '⚠️');
+        return;
       }
       const note = document.getElementById('complete-note-input').value.trim();
       const now = Date.now();
@@ -1272,8 +1526,292 @@
       showToast('速写已盖章贴上作品墙 💮', '🎉');
     }
 
+    /********************************************************************
+     * 🗂️ 专属参考图库管理 (抽屉交互、批量导入、去重、新图优先)
+     ********************************************************************/
+    function saveLibraryStorage() {
+      try {
+        localStorage.setItem('chill_sketch_gallery_v2', JSON.stringify(state.library));
+      } catch (e) {}
+      updateLibraryCountUI();
+    }
+
+    function updateLibraryCountUI() {
+      const len = state.library.length;
+      document.getElementById('lib-count-tag').textContent = len;
+      document.getElementById('drawer-total-count').textContent = `${len} 张`;
+    }
+
+    function openGalleryDrawer() {
+      renderDrawerGalleryGrid();
+      const backdrop = document.getElementById('drawer-backdrop');
+      const drawer = document.getElementById('gallery-drawer');
+      backdrop.classList.remove('hidden');
+      setTimeout(() => {
+        drawer.classList.remove('translate-y-full');
+      }, 10);
+    }
+
+    function closeGalleryDrawer() {
+      const backdrop = document.getElementById('drawer-backdrop');
+      const drawer = document.getElementById('gallery-drawer');
+      drawer.classList.add('translate-y-full');
+      setTimeout(() => {
+        backdrop.classList.add('hidden');
+      }, 300);
+    }
+
+    function renderDrawerGalleryGrid() {
+      const grid = document.getElementById('drawer-gallery-grid');
+      const emptyTip = document.getElementById('drawer-empty-tip');
+      updateLibraryCountUI();
+
+      if (!state.library || state.library.length === 0) {
+        grid.innerHTML = '';
+        emptyTip.classList.remove('hidden');
+        return;
+      }
+      emptyTip.classList.add('hidden');
+
+      grid.innerHTML = state.library.map((item) => {
+        const isCurrent = state.currentPromptItem && state.currentPromptItem.id === item.id;
+        const isNew = !item.drawnCount || item.drawnCount === 0;
+
+        let previewHtml = '';
+        if (item.svg) {
+          previewHtml = `<div class="w-full h-full p-2 flex items-center justify-center">${item.svg}</div>`;
+        } else if (item.url) {
+          previewHtml = `<img src="${item.url}" alt="${item.title}" class="w-full h-full object-cover">`;
+        }
+
+        return `
+          <div class="relative group bg-[#FFFEFA] rounded-xl overflow-hidden border ${isCurrent ? 'ring-2 ring-sageDark border-sage' : 'border-[#D9C4A0]'} shadow-2xs cursor-pointer hover:shadow-md transition flex flex-col"
+               onclick="selectPromptFromGallery('${item.id}')">
+            <div class="relative w-full aspect-square bg-[#FAF7F0] overflow-hidden flex items-center justify-center">
+              ${previewHtml}
+              ${!item.svg ? `
+                <button onclick="event.stopPropagation(); deleteGalleryItem('${item.id}')"
+                        class="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/50 hover:bg-tomato text-white flex items-center justify-center text-[10px] backdrop-blur-xs transition"
+                        title="从图库移除">✕</button>
+              ` : ''}
+              <span class="absolute bottom-1 left-1 text-[9px] px-1.5 py-0.2 rounded-md ${isNew ? 'bg-sage text-white font-bold' : 'bg-black/50 text-white'}">
+                ${isNew ? '🌱 新图' : `已画${item.drawnCount}次`}
+              </span>
+            </div>
+            <div class="p-1.5 text-[11px] font-semibold text-ink truncate">${item.title}</div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectPromptFromGallery(id) {
+      const found = state.library.find(i => i.id === id);
+      if (found) {
+        state.currentPromptItem = found;
+        renderTrainingRefStage();
+        closeGalleryDrawer();
+        showToast(`已更换画题：${found.title}`, '🖼️');
+      }
+    }
+
+    function deleteGalleryItem(id) {
+      state.library = state.library.filter(i => i.id !== id);
+      saveLibraryStorage();
+      if (state.currentPromptItem && state.currentPromptItem.id === id) {
+        state.currentPromptItem = state.library[0] || BUILTIN_REF_IMAGES[0];
+        renderTrainingRefStage();
+      }
+      renderDrawerGalleryGrid();
+      showToast('已移除该参考图', '🍃');
+    }
+
+    // 智能抽取画题：未画新图（drawnCount === 0）绝对优先轮换
+    function pickNextSmartPrompt() {
+      if (!state.library || state.library.length === 0) {
+        state.library = [...BUILTIN_REF_IMAGES];
+      }
+
+      const unDrawn = state.library.filter(i => (!i.drawnCount || i.drawnCount === 0) && (!state.currentPromptItem || i.id !== state.currentPromptItem.id));
+
+      if (unDrawn.length > 0) {
+        const next = unDrawn[Math.floor(Math.random() * unDrawn.length)];
+        state.currentPromptItem = next;
+        renderTrainingRefStage();
+        showToast(`已轮换到新画题：${next.title} 🌱`, '🎲');
+      } else {
+        const candidates = state.library.filter(i => !state.currentPromptItem || i.id !== state.currentPromptItem.id);
+        const pool = candidates.length > 0 ? candidates : state.library;
+        const sorted = [...pool].sort((a,b) => (a.drawnCount||0) - (b.drawnCount||0));
+        const next = sorted[0];
+        state.currentPromptItem = next;
+        renderTrainingRefStage();
+        showToast(`已轮换画题：${next.title}`, '🎲');
+      }
+    }
+
+    // 批量导入与去重处理（安全防御与稳定解析）
+    async function handleBulkImport(e) {
+      const files = Array.from(e.target.files || []);
+      if (files.length === 0) return;
+
+      let added = 0;
+      let duplicated = 0;
+
+      for (const file of files) {
+        try {
+          const compressedBlob = await compressImageToBlob(file, 960, 0.75);
+          const base64 = await blobToDataURL(compressedBlob);
+          if (!base64) continue;
+
+          const isDup = state.library.some(item => {
+            return item.fileSize === file.size || item.url === base64 || (item.title === file.name.replace(/\.[^/.]+$/, ''));
+          });
+
+          if (isDup) {
+            duplicated++;
+            continue;
+          }
+
+          const newItem = {
+            id: 'custom_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+            title: file.name.replace(/\.[^/.]+$/, '') || '自选画题',
+            category: '相册导入',
+            url: base64,
+            fileSize: file.size,
+            drawnCount: 0,
+            tip: '观察大形状与外轮廓'
+          };
+
+          state.library.unshift(newItem);
+          added++;
+        } catch (err) {
+          // 跳过失败项
+        }
+      }
+
+      saveLibraryStorage();
+      renderDrawerGalleryGrid();
+      e.target.value = '';
+
+      if (added > 0 && !state.trainingRunning) {
+        state.currentPromptItem = state.library[0];
+        renderTrainingRefStage();
+      }
+
+      let msg = `已批量导入 ${added} 张新参考图！`;
+      if (duplicated > 0) msg += `（自动过滤 ${duplicated} 张重复）`;
+      showToast(msg, '📥', 4500);
+    }
+
+    /********************************************************************
+     * 💮 7 列月度集章册 (Stamp Card)
+     ********************************************************************/
+    function openStampModal() {
+      const d = new Date();
+      state.stampCalendarYear = d.getFullYear();
+      state.stampCalendarMonth = d.getMonth();
+      renderStampCalendarGrid();
+      document.getElementById('stamp-modal').classList.remove('hidden');
+    }
+
+    function closeStampModal() {
+      document.getElementById('stamp-modal').classList.add('hidden');
+    }
+
+    function changeStampMonth(delta) {
+      state.stampCalendarMonth += delta;
+      if (state.stampCalendarMonth < 0) {
+        state.stampCalendarMonth = 11;
+        state.stampCalendarYear--;
+      } else if (state.stampCalendarMonth > 11) {
+        state.stampCalendarMonth = 0;
+        state.stampCalendarYear++;
+      }
+      renderStampCalendarGrid();
+    }
+
+    function renderStampCalendarGrid() {
+      const year = state.stampCalendarYear;
+      const month = state.stampCalendarMonth;
+      document.getElementById('stamp-month-title').textContent = `${year} 年 ${month + 1} 月`;
+
+      const grid = document.getElementById('stamp-calendar-grid');
+      grid.innerHTML = '';
+
+      const firstDay = new Date(year, month, 1);
+      const totalDays = new Date(year, month + 1, 0).getDate();
+
+      // 周一开头对齐：0(日)->6, 1(一)->0
+      const startCol = (firstDay.getDay() + 6) % 7;
+      let monthStampsTotal = 0;
+      const todayStr = getTodayDateKey();
+
+      for (let i = 0; i < startCol; i++) {
+        const empty = document.createElement('div');
+        empty.className = 'aspect-square';
+        grid.appendChild(empty);
+      }
+
+      for (let d = 1; d <= totalDays; d++) {
+        const dk = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+        const count = state.progressMap.get(dk) || 0;
+        monthStampsTotal += count;
+
+        const isToday = (dk === todayStr);
+        const cell = document.createElement('div');
+        cell.className = `aspect-square rounded-xl p-1 flex flex-col items-center justify-between border relative transition ${
+          isToday ? 'border-wood bg-sageLight/60 font-bold' : 'border-[#EAE0CE] bg-[#FFFEFA]'
+        }`;
+
+        let stampHtml = '';
+        if (count >= 5) {
+          stampHtml = `
+            <div class="flex flex-col items-center justify-center my-auto">
+              <span class="text-sm leading-none drop-shadow">🌟</span>
+              <span class="text-[9px] font-extrabold text-amber-600">${count}次</span>
+            </div>
+          `;
+        } else if (count > 0) {
+          stampHtml = `
+            <div class="flex flex-col items-center justify-center my-auto">
+              <span class="text-xs leading-none text-tomato font-display drop-shadow">💮</span>
+              <span class="text-[9px] font-bold text-tomato">${count}次</span>
+            </div>
+          `;
+        } else {
+          stampHtml = `<div class="h-3"></div>`;
+        }
+
+        cell.innerHTML = `
+          <span class="text-[9px] ${isToday ? 'text-sageDark font-extrabold' : 'text-inkLight'}">${d}</span>
+          ${stampHtml}
+        `;
+        grid.appendChild(cell);
+      }
+
+      document.getElementById('stamp-month-total').textContent = monthStampsTotal;
+    }
+
+    function triggerConfettiFireworks() {
+      const stage = document.getElementById('confetti-stage');
+      stage.innerHTML = '';
+      const colors = ['#8A9A7B', '#E08A4B', '#D96B4A', '#F2E2A8', '#D9C4A0'];
+      for (let i = 0; i < 40; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.left = Math.random() * 100 + 'vw';
+        piece.style.top = '-10px';
+        piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.animationDelay = (Math.random() * 0.4) + 's';
+        piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+        stage.appendChild(piece);
+      }
+      setTimeout(() => { stage.innerHTML = ''; }, 3000);
+    }
+
     function compressImageToBlob(file, maxSide = 1080, quality = 0.78) {
       return new Promise((resolve) => {
+        if (!file) return resolve(null);
         const url = URL.createObjectURL(file);
         const img = new Image();
         img.onload = () => {
@@ -1297,6 +1835,7 @@
 
     function applyPaperBrighten(blob) {
       return new Promise((resolve) => {
+        if (!blob) return resolve(blob);
         const url = URL.createObjectURL(blob);
         const img = new Image();
         img.onload = () => {
@@ -1314,51 +1853,160 @@
       });
     }
 
+    /********************************************************************
+     * 5. 文摘与备份保管箱
+     ********************************************************************/
+    /**
+     * 文摘里的每一句都是自己收下的收藏，因此不再区分“是否收藏”。
+     * 标签筛选条按现有话签的标签动态生成，自定义标签也能直接筛选。
+     */
+    function renderExcerptFilterBar() {
+      const bar = document.getElementById('excerpt-filter-bar');
+      const tags = new Set();
+      state.excerpts.forEach(e => (e.tags || []).forEach(t => tags.add(t)));
+
+      if (state.excerptFilter !== 'all' && !tags.has(state.excerptFilter)) {
+        state.excerptFilter = 'all';
+      }
+
+      bar.innerHTML = ['all', ...tags].map(f => {
+        const active = state.excerptFilter === f;
+        const label = f === 'all' ? '全部话签' : escapeHtml(f);
+        return `<button onclick="setExcerptFilter(this.dataset.filter)" data-filter="${escapeAttr(f)}" class="excerpt-filter-chip px-2.5 py-0.5 rounded-full text-[11px] font-medium transition shrink-0 ${active ? 'bg-sage text-white' : 'bg-[#EFE5D4] text-inkLight'}">${label}</button>`;
+      }).join('');
+    }
+
     function renderExcerptsList() {
+      renderExcerptFilterBar();
       const container = document.getElementById('excerpts-list-container');
-      container.innerHTML = state.excerpts.map(e => `
+      const q = (state.excerptSearchQuery || '').toLowerCase();
+      const filter = state.excerptFilter;
+
+      const filtered = state.excerpts.filter(e => {
+        if (filter !== 'all' && !(e.tags || []).includes(filter)) return false;
+        if (!q) return true;
+        return (e.content || '').toLowerCase().includes(q)
+          || (e.source || '').toLowerCase().includes(q)
+          || (e.tags || []).some(t => t.toLowerCase().includes(q));
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="journal-card rounded-2xl p-6 text-center text-inkLight bg-[#FFFCF5]">
+            <p class="text-xs">没有找到对应的话签~</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(e => `
         <div class="journal-card rounded-2xl p-4 bg-[#FFFCF5] space-y-2 lined-paper">
           <p class="text-xs text-ink leading-relaxed font-sans">“${escapeHtml(e.content)}”</p>
-          <div class="flex items-center justify-between text-[11px] text-inkLight pt-1 border-t border-[#E5D7C1]">
-            <span>— ${escapeHtml(e.source || '摘抄')}</span>
-            <button onclick="drawThisExcerpt('${e.content}')" class="px-2.5 py-1 rounded-full bg-warmOrange text-white text-[10px]">🎨 画这句</button>
+          ${(e.tags || []).length ? `
+            <div class="flex flex-wrap items-center gap-1">
+              ${e.tags.map(t => `<span class="inline-flex items-center h-5 px-2 rounded-full bg-[#EFE5D4] text-sageDark text-[10px] font-medium leading-none">${escapeHtml(t)}</span>`).join('')}
+            </div>
+          ` : ''}
+          <div class="flex items-center justify-between gap-2 text-[11px] text-inkLight pt-1.5 border-t border-[#E5D7C1]">
+            <span class="truncate leading-none">— ${escapeHtml(e.source || '摘抄')}</span>
+            <button onclick="drawThisExcerpt('${e.id}')" class="shrink-0 inline-flex items-center gap-1 h-6 px-3 rounded-full bg-warmOrange text-white text-[11px] font-semibold leading-none active:scale-95 transition">🎨 画这句</button>
           </div>
         </div>
       `).join('');
     }
-    function drawThisExcerpt(content) {
-      state.currentSentence = { content, source: '文摘收藏' };
-      document.getElementById('training-sentence-text').textContent = content;
+
+    function handleExcerptSearch(val) {
+      state.excerptSearchQuery = val;
+      renderExcerptsList();
+    }
+
+    function setExcerptFilter(f) {
+      state.excerptFilter = f;
+      renderExcerptsList();
+    }
+
+    function drawThisExcerpt(id) {
+      const item = state.excerpts.find(x => x.id === id);
+      if (!item) return;
+      state.currentSentence = { content: item.content, source: item.source || '文摘收藏' };
+      document.getElementById('training-sentence-text').textContent = item.content;
       switchTab('training');
       switchTrainingMode('sentence');
       showToast('已将该句设为当前画题！', '🎨');
     }
+
     function pickRandomSentencePrompt() {
       const item = BUILTIN_SENTENCE_PROMPTS[Math.floor(Math.random() * BUILTIN_SENTENCE_PROMPTS.length)];
       state.currentSentence = item;
       document.getElementById('training-sentence-text').textContent = item.content;
       document.getElementById('training-sentence-sub').textContent = `💡 ${item.tip}`;
     }
-    function openExcerptModal() { document.getElementById('excerpt-modal').classList.remove('hidden'); }
+
+    function openExcerptModal() {
+      state.excerptModalTags = new Set(['#画题']);
+      document.getElementById('excerpt-input-content').value = '';
+      document.getElementById('excerpt-input-source').value = '';
+      document.getElementById('excerpt-custom-tag-input').value = '';
+      renderExcerptModalTags();
+      document.getElementById('excerpt-modal').classList.remove('hidden');
+    }
     function closeExcerptModal() { document.getElementById('excerpt-modal').classList.add('hidden'); }
+
+    // 常用标签 + 自定义标签统一渲染，避免自定义标签无处可选
+    function renderExcerptModalTags() {
+      const wrap = document.getElementById('excerpt-modal-tags');
+      const list = ['#画题', '#放松'];
+      state.excerptModalTags.forEach(t => { if (!list.includes(t)) list.push(t); });
+
+      wrap.innerHTML = list.map(t => {
+        const active = state.excerptModalTags.has(t);
+        return `<button type="button" onclick="toggleExcerptModalTag(this.dataset.tag)" data-tag="${escapeAttr(t)}" class="excerpt-tag-btn px-2.5 py-1 rounded-lg text-xs border ${active ? 'border-sage bg-sageLight text-sageDark font-medium' : 'border-[#D9C4A0] bg-[#FFFEFA] text-inkLight'}">${escapeHtml(t)}</button>`;
+      }).join('');
+    }
+
+    function toggleExcerptModalTag(tag) {
+      if (!tag) return;
+      if (state.excerptModalTags.has(tag)) {
+        if (state.excerptModalTags.size > 1) state.excerptModalTags.delete(tag);
+      } else {
+        state.excerptModalTags.add(tag);
+      }
+      renderExcerptModalTags();
+    }
+
+    function addCustomTagToExcerptModal() {
+      const input = document.getElementById('excerpt-custom-tag-input');
+      let val = input.value.trim();
+      if (!val) return;
+      if (!val.startsWith('#')) val = '#' + val;
+      state.excerptModalTags.add(val);
+      input.value = '';
+      renderExcerptModalTags();
+    }
+
     async function saveExcerptItem() {
       const content = document.getElementById('excerpt-input-content').value.trim();
       const source = document.getElementById('excerpt-input-source').value.trim();
-      if (!content) return;
+      if (!content) {
+        showToast('请先输入句子内容哦', '⚠️');
+        return;
+      }
       const now = Date.now();
-      const item = { id: 'exc-' + now, content, source, tags: ['#画题'], starred: false, createdAt: now };
+      const item = { id: 'exc-' + now, content, source, tags: Array.from(state.excerptModalTags), createdAt: now };
       await dbPut('excerpts', item);
       state.excerpts.unshift(item);
       closeExcerptModal();
       renderExcerptsList();
-      showToast('已存入话签罐 📖', '✨');
+      showToast('已收入自己的收藏话签 📖', '✨');
     }
+
     function openBackupModal() {
       document.getElementById('stat-records-count').textContent = state.records.length;
       document.getElementById('stat-excerpts-count').textContent = state.excerpts.length;
       document.getElementById('backup-modal').classList.remove('hidden');
     }
     function closeBackupModal() { document.getElementById('backup-modal').classList.add('hidden'); }
+
     async function exportAllDataBackup() {
       const payload = { app: 'ChillSketchHut', records: state.records, excerpts: state.excerpts };
       const blob = new Blob([JSON.stringify(payload)], {type:'application/json'});
@@ -1366,20 +2014,32 @@
       a.download = `chill-sketch-hut-backup_${getTodayDateKey()}.json`; a.click();
       showToast('备份已导出', '✅');
     }
+
     async function importDataBackup(e) {
       const f = e.target.files && e.target.files[0];
       if (!f) return;
-      const data = JSON.parse(await f.text());
-      if (data.records) for (const r of data.records) await dbPut('records', r);
-      if (data.excerpts) for (const x of data.excerpts) await dbPut('excerpts', x);
-      await loadAllAppData();
-      closeBackupModal();
-      showToast('数据恢复成功！', '🎉');
+      try {
+        const text = await readTextFile(f);
+        if (!text) {
+          showToast('无法读取备份文件内容', '⚠️');
+          return;
+        }
+        const data = JSON.parse(text);
+        if (data.records) for (const r of data.records) await dbPut('records', r);
+        if (data.excerpts) for (const x of data.excerpts) await dbPut('excerpts', x);
+        await loadAllAppData();
+        closeBackupModal();
+        showToast('数据恢复成功！', '🎉');
+      } catch (err) {
+        showToast('备份文件解析失败，请检查格式', '⚠️');
+      }
     }
+
     function escapeHtml(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function escapeAttr(str) { return escapeHtml(str).replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
     /********************************************************************
-     * 5. 真实 Canvas 3:4 分享卡绘制（画作绝对主角 · 大图铺满 · 无字极简版）
+     * 6. 真实 Canvas 3:4 分享卡绘制
      ********************************************************************/
     function openPosterModal(id) {
       const rec = state.records.find(r => r.id === id);
@@ -1411,43 +2071,37 @@
       const ctx = canvas.getContext('2d');
       const w = canvas.width, h = canvas.height; // 900 x 1200 (标准 3:4)
 
-      // 底纸背景色（温润纸质）
       let bgHex = '#FAF7F0';
       if (state.posterTheme === 'kraft') bgHex = '#EFE3CE';
       if (state.posterTheme === 'sage') bgHex = '#E5ECE0';
       ctx.fillStyle = bgHex;
       ctx.fillRect(0, 0, w, h);
 
-      // 大相框外围边距（左右 50px，上下给与充足包边）
       const frameX = 50, frameY = 50, frameW = 800, frameH = 1100;
       
-      // 相纸阴影质感
       ctx.fillStyle = '#FFFFFF';
       ctx.shadowColor = 'rgba(74, 66, 56, 0.14)';
       ctx.shadowBlur = 36;
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 12;
       ctx.fillRect(frameX, frameY, frameW, frameH);
-      ctx.shadowBlur = 0; // 重置阴影
+      ctx.shadowBlur = 0;
 
-      // 极轻微的外框压纹边线
       ctx.strokeStyle = '#EBE1D0';
       ctx.lineWidth = 1.5;
       ctx.strokeRect(frameX, frameY, frameW, frameH);
 
-      // 画作主体区域（占据整张海报绝对主角：高度达到 950px，占比超过 86%！）
       const imgPad = 28;
       const imgX = frameX + imgPad;
       const imgY = frameY + imgPad;
-      const imgW = frameW - (imgPad * 2); // 744px
-      const imgH = 950; // 744 x 950 大画幅
+      const imgW = frameW - (imgPad * 2);
+      const imgH = 950;
 
       if (rec.imageBlob) {
         const url = URL.createObjectURL(rec.imageBlob);
         const img = new Image();
         img.onload = () => {
           ctx.save();
-          // 切圆角矩形遮罩，视觉更柔和精致
           drawRoundedRectPath(ctx, imgX, imgY, imgW, imgH, 14);
           ctx.clip();
 
@@ -1457,7 +2111,6 @@
           let dw = imgW, dh = imgH, dx = imgX, dy = imgY;
 
           if (state.posterFitMode === 'cover') {
-            // 自动无缝铺满，让画作视觉冲击力最大
             if (imgAspect > boxAspect) {
               dw = imgH * imgAspect;
               dx = imgX - (dw - imgW) / 2;
@@ -1467,7 +2120,6 @@
             }
             ctx.drawImage(img, dx, dy, dw, dh);
           } else {
-            // 原图留白模式
             ctx.fillStyle = '#FAF7F0';
             ctx.fillRect(imgX, imgY, imgW, imgH);
             if (imgAspect > boxAspect) {
@@ -1483,13 +2135,16 @@
           URL.revokeObjectURL(url);
           finishMinimalistPosterFooter(ctx, rec, w, h, frameX, frameY, frameW, frameH, imgY + imgH);
         };
+        img.onerror = () => {
+          URL.revokeObjectURL(url);
+          finishMinimalistPosterFooter(ctx, rec, w, h, frameX, frameY, frameW, frameH, imgY + imgH);
+        };
         img.src = url;
       } else {
         finishMinimalistPosterFooter(ctx, rec, w, h, frameX, frameY, frameW, frameH, imgY + imgH);
       }
     }
 
-    // 辅助圆角绘制
     function drawRoundedRectPath(ctx, x, y, width, height, radius) {
       ctx.beginPath();
       ctx.moveTo(x + radius, y);
@@ -1504,11 +2159,9 @@
       ctx.closePath();
     }
 
-    // 极简艺术画廊级落款排版（无正文打扰，纯净高级）
     function finishMinimalistPosterFooter(ctx, rec, w, h, frameX, frameY, frameW, frameH, imgBottomY) {
       const footerY = imgBottomY + 45;
 
-      // 1. 左侧：松鸦画坊极简品牌标示 + 日期
       ctx.textAlign = 'left';
       ctx.fillStyle = '#4A4238';
       ctx.font = "bold 24px 'ZCOOL KuaiLe', sans-serif";
@@ -1516,14 +2169,13 @@
 
       ctx.fillStyle = '#8A7E70';
       ctx.font = "18px 'Courier New', monospace";
-      ctx.fillText(`NO. ${rec.dateKey || '2026-10-15'} · 随手画两笔`, frameX + 32, footerY + 28);
+      ctx.fillText(`NO. ${rec.dateKey || '2026-10-16'} · 随手画两笔`, frameX + 32, footerY + 28);
 
-      // 2. 右侧：朱红复古印章「松鸦留念 💮」
       ctx.save();
       const stampCenterX = frameX + frameW - 95;
       const stampCenterY = footerY + 12;
       ctx.translate(stampCenterX, stampCenterY);
-      ctx.rotate(-0.08); // 微微手盖倾斜感
+      ctx.rotate(-0.08);
       ctx.strokeStyle = '#D96B4A';
       ctx.lineWidth = 2.5;
       ctx.strokeRect(-52, -18, 104, 36);
@@ -1534,7 +2186,6 @@
       ctx.fillText('松鸦留念 💮', 0, 7);
       ctx.restore();
 
-      // 输出最终分享图并在下方生成小红书文案
       const dataUrl = ctx.canvas.toDataURL('image/jpeg', 0.94);
       document.getElementById('poster-output-img').src = dataUrl;
       document.getElementById('poster-download-link').href = dataUrl;
